@@ -208,3 +208,9 @@ __marimo__/
 
 # Project-specific
 # data_pipeline/output/  # Uncomment to exclude generated data
+
+# macOS
+.DS_Store
+
+# Node.js
+node_modules/
