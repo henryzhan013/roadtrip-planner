@@ -19,6 +19,12 @@ function PlaceCard(props) {
     minWidth: "30px"
   }
 
+  const heartStyle = {
+    fontSize: "20px",
+    cursor: "pointer",
+    color: props.isFavorite ? "red":"#ccc"
+  }
+
   return (
     <div style={cardStyle} onClick={props.onClick}>
       <span style={rankStyle}>{props.rank}</span>
@@ -26,6 +32,15 @@ function PlaceCard(props) {
         <h3 style={{ margin: "0 0 5px 0" }}>{props.name}</h3>
         <p style={{ margin: 0, color: "#666" }}>Match: {props.score}</p>
       </div>
+      <span
+        style = {heartStyle}
+        onClick = {(e) => {
+          e.stopPropagation()
+          props.onToggleFavorite()
+        }}
+      >
+        {props.isFavorite ? "❤️" : "🤍"}
+      </span>
     </div>
   )
 }
