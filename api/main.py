@@ -159,6 +159,22 @@ class PlaceSummary(BaseModel):
     rating_count: int = 0
     category: str = ""
     why: str | None = None
+    photo_url: str | None = None
+    price_level: int | None = None  # 1=cheap, 2=moderate, 3=expensive, 4=very expensive
+
+
+class Activity(BaseModel):
+    """A single activity in the itinerary."""
+    activity_type: str  # "drive", "food", "attraction", "activity", "hotel"
+    description: str  # e.g., "Drive to Miami", "Visit the beach"
+    place: PlaceSummary | None = None  # The actual place from Google
+
+
+class DayPlan(BaseModel):
+    """A detailed day plan with activities."""
+    day: int
+    date_label: str  # e.g., "Day 1 - Austin to San Antonio"
+    activities: list[Activity]
 
 
 class SearchResponse(BaseModel):
@@ -172,51 +188,59 @@ class PlanRequest(BaseModel):
     query: str
 
 
-class DayStop(BaseModel):
-    """A day's worth of places."""
-    day: int
-    city: str
-    places: list[PlaceSummary]
-
-
 class PlanResponse(BaseModel):
     """Response for /plan endpoint."""
     query: str
-    stops: list[DayStop]
+    summary: str  # Brief trip summary
+    days: list[DayPlan]
 
 
 # =============================================================================
 # LLM INTEGRATION
 # =============================================================================
 
-PLAN_SYSTEM_PROMPT = """You are a travel planning assistant. Given a natural language trip request, extract structured information to help plan the trip.
+PLAN_SYSTEM_PROMPT = """You are a laid-back travel buddy helping plan a trip. Create realistic, varied itineraries.
 
-You must respond with valid JSON only, no other text. The JSON should have this structure:
+Respond with valid JSON only:
 {
-  "duration_days": <number>,
-  "cities": ["city1", "city2", ...],
-  "searches": [
+  "summary": "Brief trip summary",
+  "days": [
     {
-      "city": "city name",
-      "day": <day number>,
-      "queries": ["search query 1", "search query 2"],
-      "why": {"query1": "reason this is recommended", "query2": "reason"}
+      "day": 1,
+      "date_label": "Exploring Miami",
+      "activities": [
+        {"activity_type": "activity", "description": "...", "search_query": "..."},
+        ...
+      ]
     }
   ]
 }
 
+IMPORTANT - Make each day DIFFERENT based on what makes sense:
+
+Example varied days:
+- "Beach Day in Miami" - just beach, lunch, maybe sunset bar
+- "Road Trip Day" - long drive with a cool stop halfway for lunch
+- "Exploring Austin" - wander around, hit a few spots, great dinner
+- "Lazy Morning, Big Night" - sleep in, one afternoon thing, then nightlife
+- "National Park Day" - full day hiking, pack lunch, campfire dinner
+
+activity_type options: "drive", "food", "attraction", "activity", "hotel"
+search_query: specific Google Places search with city+state, or null for drives
+
 Guidelines:
-- Extract duration from the query (e.g., "7 days", "weekend" = 2 days, "week" = 7 days)
-- Choose appropriate cities for the region/route mentioned
-- Create specific search queries that will work well with Google Places (e.g., "honky tonk bars Austin TX")
-- Provide a brief "why" explanation for each type of place
-- Spread cities across the days appropriately
-- Limit to 2-3 search queries per city to keep results focused
-- Always include the state/region in search queries for better results"""
+- date_label should describe the vibe, not just "City A to City B"
+- Some days have 2-3 activities, some have 5-6 - varies naturally
+- Long drive days = fewer activities, just driving + food stops
+- Chill days = maybe just beach + meals
+- Exploration days = more activities packed in
+- Don't force hotel every night if camping or if it's the last day
+- Match the user's vibe (party trip vs relaxing vs adventure vs foodie)
+- Be specific with search queries for better Google Places results"""
 
 
 async def call_openai(query: str) -> dict:
-    """Parse user query into search plan using OpenAI."""
+    """Parse user query into detailed trip plan using OpenAI."""
     allowed, reason = openai_limiter.check()
     if not allowed:
         raise HTTPException(status_code=429, detail=reason)
@@ -232,7 +256,6 @@ async def call_openai(query: str) -> dict:
         )
         openai_limiter.record()
 
-        # Parse the response
         response_text = response.choices[0].message.content
         return json.loads(response_text)
 
@@ -264,7 +287,7 @@ async def search_google_places(query: str, max_results: int = 5) -> list[dict]:
     headers = {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": GOOGLE_PLACES_API_KEY,
-        "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.types,places.primaryType"
+        "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.location,places.rating,places.userRatingCount,places.types,places.primaryType,places.photos,places.priceLevel"
     }
 
     body = {
@@ -290,6 +313,27 @@ async def search_google_places(query: str, max_results: int = 5) -> list[dict]:
         results = []
         for place in places:
             location = place.get("location", {})
+
+            # Get photo URL if available
+            photo_url = None
+            photos = place.get("photos", [])
+            if photos:
+                photo_name = photos[0].get("name", "")
+                if photo_name:
+                    photo_url = f"https://places.googleapis.com/v1/{photo_name}/media?maxWidthPx=400&key={GOOGLE_PLACES_API_KEY}"
+
+            # Parse price level (Google returns strings like "PRICE_LEVEL_MODERATE")
+            price_level_str = place.get("priceLevel", "")
+            price_level = None
+            if "INEXPENSIVE" in price_level_str:
+                price_level = 1
+            elif "MODERATE" in price_level_str:
+                price_level = 2
+            elif "EXPENSIVE" in price_level_str:
+                price_level = 3
+            elif "VERY_EXPENSIVE" in price_level_str:
+                price_level = 4
+
             results.append({
                 "place_id": place.get("id", ""),
                 "name": place.get("displayName", {}).get("text", ""),
@@ -299,6 +343,8 @@ async def search_google_places(query: str, max_results: int = 5) -> list[dict]:
                 "rating": place.get("rating"),
                 "rating_count": place.get("userRatingCount", 0),
                 "category": place.get("primaryType", ""),
+                "photo_url": photo_url,
+                "price_level": price_level,
             })
 
         # Cache results
@@ -371,11 +417,6 @@ async def search(
 ):
     """
     Direct Google Places text search.
-
-    Simple search without LLM processing. Good for queries like:
-    - "coffee shops austin tx"
-    - "honky tonk bars fort worth"
-    - "bbq restaurants san antonio"
     """
     if not GOOGLE_PLACES_API_KEY:
         raise HTTPException(status_code=503, detail="Google Places API key not configured")
@@ -391,17 +432,17 @@ async def search(
 @app.post("/plan", response_model=PlanResponse)
 async def create_plan(request: PlanRequest):
     """
-    Create a trip plan using natural language.
+    Create a detailed trip plan using natural language.
 
-    The LLM parses your query to understand:
-    - Trip duration
-    - Cities/route
-    - Types of places you want
-
-    Then searches Google Places for each city and returns a day-by-day itinerary.
+    Returns a day-by-day itinerary with:
+    - Morning activities
+    - Lunch recommendations
+    - Afternoon activities
+    - Dinner recommendations
+    - Accommodation
 
     Example queries:
-    - "7 day roadtrip through texas with honky tonk bars and bbq"
+    - "5 day roadtrip through florida beaches and seafood"
     - "weekend trip austin for live music and tacos"
     - "3 days in san antonio historic sites and mexican food"
     """
@@ -410,42 +451,43 @@ async def create_plan(request: PlanRequest):
     if not GOOGLE_PLACES_API_KEY:
         raise HTTPException(status_code=503, detail="Google Places API key not configured")
 
-    # Step 1: Parse query with OpenAI
+    # Step 1: Get detailed plan from OpenAI
     plan = await call_openai(request.query)
 
-    # Step 2: Search Google Places for each query
-    stops: list[DayStop] = []
-    searches = plan.get("searches", [])
+    # Step 2: For each activity with a search_query, find the actual place
+    days: list[DayPlan] = []
 
-    for search_info in searches:
-        city = search_info.get("city", "")
-        day = search_info.get("day", 1)
-        queries = search_info.get("queries", [])
-        why_map = search_info.get("why", {})
+    for day_data in plan.get("days", []):
+        activities: list[Activity] = []
 
-        city_places: list[PlaceSummary] = []
+        for act in day_data.get("activities", []):
+            search_query = act.get("search_query")
+            place = None
 
-        for query in queries:
-            try:
-                results = await search_google_places(query, max_results=3)
-                why_text = why_map.get(query, "")
+            if search_query:
+                try:
+                    results = await search_google_places(search_query, max_results=1)
+                    if results:
+                        place = PlaceSummary(**results[0], why=act.get("description"))
+                except HTTPException:
+                    pass  # Skip if search fails
 
-                for r in results:
-                    place = PlaceSummary(**r, why=why_text)
-                    city_places.append(place)
-            except HTTPException:
-                # Skip failed queries, continue with others
-                continue
+            activities.append(Activity(
+                activity_type=act.get("activity_type", "activity"),
+                description=act.get("description", ""),
+                place=place
+            ))
 
-        if city_places:
-            stops.append(DayStop(day=day, city=city, places=city_places))
-
-    # Sort by day
-    stops.sort(key=lambda s: s.day)
+        days.append(DayPlan(
+            day=day_data.get("day", 1),
+            date_label=day_data.get("date_label", f"Day {day_data.get('day', 1)}"),
+            activities=activities
+        ))
 
     return PlanResponse(
         query=request.query,
-        stops=stops,
+        summary=plan.get("summary", ""),
+        days=days
     )
 
 

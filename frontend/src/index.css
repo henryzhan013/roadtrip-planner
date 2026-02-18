@@ -9,3 +9,75 @@ body {
   background-color: #f5f5f5;
   min-height: 100vh;
 }
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .main-container {
+    padding: 10px !important;
+  }
+
+  .search-container {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  .search-input {
+    width: 100% !important;
+    margin-right: 0 !important;
+  }
+
+  .search-buttons {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .search-buttons button {
+    flex: 1;
+  }
+
+  .action-buttons {
+    flex-wrap: wrap !important;
+  }
+
+  .content-layout {
+    flex-direction: column !important;
+  }
+
+  .itinerary-panel {
+    max-height: 400px !important;
+  }
+
+  .map-panel {
+    height: 400px !important;
+  }
+
+  .place-detail {
+    flex-direction: column !important;
+  }
+
+  .place-detail img {
+    width: 100% !important;
+    height: 200px !important;
+  }
+
+  .activity-card {
+    flex-wrap: wrap;
+  }
+
+  .activity-photo {
+    width: 60px !important;
+    height: 45px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 1.5rem !important;
+  }
+
+  .action-buttons button {
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+  }
+}
