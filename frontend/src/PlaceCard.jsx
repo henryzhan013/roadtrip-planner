@@ -28,9 +28,10 @@ function PlaceCard(props) {
   return (
     <div style={cardStyle} onClick={props.onClick}>
       <span style={rankStyle}>{props.rank}</span>
-      <div>
+      <div style={{ flex: 1 }}>
         <h3 style={{ margin: "0 0 5px 0" }}>{props.name}</h3>
-        <p style={{ margin: 0, color: "#666" }}>Match: {props.score}</p>
+        {props.rating && <p style={{ margin: 0, color: "#666" }}>⭐ {props.rating}</p>}
+        {props.why && <p style={{ margin: "5px 0 0 0", color: "#888", fontSize: "14px" }}>💡 {props.why}</p>}
       </div>
       <span
         style = {heartStyle}

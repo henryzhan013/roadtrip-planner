@@ -30,7 +30,7 @@ function Map(props){
                     key={result.place.place_id}
                     position={[result.place.lat, result.place.lng]}
                     eventHandlers={{
-                        click: () => props.onSelectedPlace(result)
+                        click: () => props.onSelectPlace(result)
                     }}
                 >
                     <Popup> {result.place.name}</Popup>
