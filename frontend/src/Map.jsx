@@ -80,7 +80,7 @@ function FitBounds({ positions }) {
     return null
 }
 
-function Map({ results, tripDays, onSelectPlace, onRouteInfo }) {
+function Map({ results, tripDays, onSelectPlace, onRouteInfo, mapView = "daily" }) {
     const [routeGeometry, setRouteGeometry] = useState([])
     const [routeLoading, setRouteLoading] = useState(false)
     const defaultCenter = [30.27, -97.74] // Austin, TX
@@ -90,19 +90,31 @@ function Map({ results, tripDays, onSelectPlace, onRouteInfo }) {
         .filter(r => r.place)
         .map(r => ({ lat: r.place.lat, lng: r.place.lng }))
 
-    // Build waypoints from tripDays
+    // Build waypoints based on map view mode
     const waypoints = []
     if (tripDays && tripDays.length > 0) {
-        tripDays.forEach(day => {
-            const placesWithLocation = day.activities
-                .filter(act => act.place && act.place.lat && act.place.lng)
+        if (mapView === "fullTrip") {
+            // Full trip: ALL stops in sequence
+            tripDays.forEach(day => {
+                day.activities
+                    .filter(act => act.place && act.place.lat && act.place.lng)
+                    .forEach(act => {
+                        waypoints.push({ lat: act.place.lat, lng: act.place.lng })
+                    })
+            })
+        } else {
+            // Daily view: centroid per day
+            tripDays.forEach(day => {
+                const placesWithLocation = day.activities
+                    .filter(act => act.place && act.place.lat && act.place.lng)
 
-            if (placesWithLocation.length > 0) {
-                const avgLat = placesWithLocation.reduce((sum, act) => sum + act.place.lat, 0) / placesWithLocation.length
-                const avgLng = placesWithLocation.reduce((sum, act) => sum + act.place.lng, 0) / placesWithLocation.length
-                waypoints.push({ lat: avgLat, lng: avgLng })
-            }
-        })
+                if (placesWithLocation.length > 0) {
+                    const avgLat = placesWithLocation.reduce((sum, act) => sum + act.place.lat, 0) / placesWithLocation.length
+                    const avgLng = placesWithLocation.reduce((sum, act) => sum + act.place.lng, 0) / placesWithLocation.length
+                    waypoints.push({ lat: avgLat, lng: avgLng })
+                }
+            })
+        }
     }
 
     // Fetch real driving route from OSRM
@@ -145,7 +157,7 @@ function Map({ results, tripDays, onSelectPlace, onRouteInfo }) {
         }
 
         fetchRoute()
-    }, [JSON.stringify(waypoints)])
+    }, [JSON.stringify(waypoints), mapView])
 
     let globalIndex = 0
 
@@ -165,8 +177,8 @@ function Map({ results, tripDays, onSelectPlace, onRouteInfo }) {
             {routeGeometry.length > 1 && (
                 <Polyline
                     positions={routeGeometry}
-                    color="#2196F3"
-                    weight={4}
+                    color={mapView === "fullTrip" ? "#E91E63" : "#2196F3"}
+                    weight={mapView === "fullTrip" ? 5 : 4}
                     opacity={0.8}
                 />
             )}

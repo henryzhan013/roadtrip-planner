@@ -20,6 +20,19 @@ const priceLevels = {
   4: '$$$$'
 }
 
+// Generate booking/map links for a place
+const getPlaceLinks = (place) => {
+  const encodedName = encodeURIComponent(place.name)
+  const encodedAddress = encodeURIComponent(place.address || '')
+
+  return {
+    googleMaps: `https://www.google.com/maps/search/?api=1&query=${encodedName}+${encodedAddress}&query_place_id=${place.place_id}`,
+    googleDirections: `https://www.google.com/maps/dir/?api=1&destination=${encodedName}+${encodedAddress}&destination_place_id=${place.place_id}`,
+    yelp: `https://www.yelp.com/search?find_desc=${encodedName}&find_loc=${encodedAddress}`,
+    bookGoogle: `https://www.google.com/search?q=${encodedName}+${encodedAddress}+reservations+booking`
+  }
+}
+
 // API URL from environment
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -46,6 +59,7 @@ function App(){
   const [mode, setMode] = useState("search")
   const [shareMessage, setShareMessage] = useState("")
   const [routeInfo, setRouteInfo] = useState(null)
+  const [mapView, setMapView] = useState("daily") // "daily" or "fullTrip"
 
   // Load trip from URL on mount
   useEffect(() => {
@@ -750,6 +764,59 @@ function App(){
                               </span>
                             )}
                           </div>
+                          {/* Booking & Map Links */}
+                          <div style={{ marginTop: "6px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                            <a
+                              href={getPlaceLinks(activity.place).googleMaps}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              style={{
+                                fontSize: "11px",
+                                color: "#1a73e8",
+                                textDecoration: "none",
+                                padding: "3px 8px",
+                                backgroundColor: "#e8f0fe",
+                                borderRadius: "4px"
+                              }}
+                            >
+                              📍 Map
+                            </a>
+                            <a
+                              href={getPlaceLinks(activity.place).googleDirections}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              style={{
+                                fontSize: "11px",
+                                color: "#1a73e8",
+                                textDecoration: "none",
+                                padding: "3px 8px",
+                                backgroundColor: "#e8f0fe",
+                                borderRadius: "4px"
+                              }}
+                            >
+                              🚗 Directions
+                            </a>
+                            {(activity.activity_type === "food" || activity.activity_type === "hotel") && (
+                              <a
+                                href={getPlaceLinks(activity.place).bookGoogle}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                  fontSize: "11px",
+                                  color: "#fff",
+                                  textDecoration: "none",
+                                  padding: "3px 8px",
+                                  backgroundColor: "#4CAF50",
+                                  borderRadius: "4px"
+                                }}
+                              >
+                                📅 Book
+                              </a>
+                            )}
+                          </div>
                         </>
                       ) : (
                         <div style={{
@@ -846,7 +913,39 @@ function App(){
 
       {/* Right Panel - Map */}
       <div className="map-panel" style={{ flex: 2, minWidth: 0 }}>
-        <Map results={results} tripDays={tripDays} onSelectPlace={setSelectedPlace} onRouteInfo={setRouteInfo} />
+        {tripDays.length > 1 && (
+          <div style={{ marginBottom: "10px", display: "flex", gap: "10px" }}>
+            <button
+              onClick={() => setMapView("daily")}
+              style={{
+                padding: "8px 16px",
+                backgroundColor: mapView === "daily" ? "#2196F3" : "#f0f0f0",
+                color: mapView === "daily" ? "white" : "#333",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontSize: "14px"
+              }}
+            >
+              Day-by-Day
+            </button>
+            <button
+              onClick={() => setMapView("fullTrip")}
+              style={{
+                padding: "8px 16px",
+                backgroundColor: mapView === "fullTrip" ? "#2196F3" : "#f0f0f0",
+                color: mapView === "fullTrip" ? "white" : "#333",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontSize: "14px"
+              }}
+            >
+              🗺️ Full Trip Route
+            </button>
+          </div>
+        )}
+        <Map results={results} tripDays={tripDays} onSelectPlace={setSelectedPlace} onRouteInfo={setRouteInfo} mapView={mapView} />
       </div>
     </div>
   </div>
