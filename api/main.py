@@ -241,6 +241,9 @@ Guidelines:
 
 async def call_openai(query: str) -> dict:
     """Parse user query into detailed trip plan using OpenAI."""
+    if openai_client is None:
+        raise HTTPException(status_code=503, detail="OpenAI client not initialized")
+
     allowed, reason = openai_limiter.check()
     if not allowed:
         raise HTTPException(status_code=429, detail=reason)
