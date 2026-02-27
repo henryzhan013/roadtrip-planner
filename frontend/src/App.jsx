@@ -54,10 +54,7 @@ function App(){
   const [showSyncModal, setShowSyncModal] = useState(false)
   const [syncInput, setSyncInput] = useState("")
   const [syncLoading, setSyncLoading] = useState(false)
-  const [savedTrips, setSavedTrips] = useState(() => {
-    const saved = localStorage.getItem("savedTrips")
-    return saved ? JSON.parse(saved) : []
-  })
+  const [savedTrips, setSavedTrips] = useState([])
   const [showSavedTrips, setShowSavedTrips] = useState(false)
   const [mode, setMode] = useState("search")
   const [shareMessage, setShareMessage] = useState("")
@@ -65,21 +62,37 @@ function App(){
   const [mapView, setMapView] = useState("daily") // "daily" or "fullTrip"
 
   // Load trip from URL on mount
+  // Load trip from URL on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const tripId = params.get('trip')
-    if (tripId) {
-      const trip = savedTrips.find(t => t.id === tripId)
-      if (trip) {
-        loadTrip(trip)
+    const urlSyncCode = params.get('sync')
+
+    if (urlSyncCode && tripId) {
+      // Load trip from shared URL
+      const loadSharedTrip = async () => {
+        try {
+          const response = await fetch(`${API_URL}/trips/${urlSyncCode}`)
+          if (response.ok) {
+            const data = await response.json()
+            const trip = data.trips.find(t => t.id === tripId)
+            if (trip) {
+              loadTrip(trip)
+            }
+          }
+        } catch (err) {
+          console.log("Failed to load shared trip:", err)
+        }
       }
+      loadSharedTrip()
     }
   }, [])
 
-  // Load favorites when sync code is set
+  // Load favorites and trips when sync code is set
   useEffect(() => {
     if (syncCode) {
       loadFavorites()
+      loadTrips()
     }
   }, [syncCode])
 
@@ -93,6 +106,19 @@ function App(){
       }
     } catch (err) {
       console.log("Failed to load favorites:", err)
+    }
+  }
+
+  const loadTrips = async () => {
+    if (!syncCode) return
+    try {
+      const response = await fetch(`${API_URL}/trips/${syncCode}`)
+      if (response.ok) {
+        const data = await response.json()
+        setSavedTrips(data.trips)
+      }
+    } catch (err) {
+      console.log("Failed to load trips:", err)
     }
   }
 
@@ -213,22 +239,43 @@ function App(){
     }
   }
 
-  const saveTrip = () => {
+  const saveTrip = async () => {
     if (!tripDays.length) return
 
-    const trip = {
-      id: generateTripId(),
-      query,
-      summary: tripSummary,
-      days: tripDays,
-      savedAt: new Date().toISOString()
+    if (!syncCode) {
+      setShowSyncModal(true)
+      return
     }
 
-    const newSavedTrips = [trip, ...savedTrips]
-    setSavedTrips(newSavedTrips)
-    localStorage.setItem("savedTrips", JSON.stringify(newSavedTrips))
-    setShareMessage("Trip saved!")
-    setTimeout(() => setShareMessage(""), 2000)
+    const tripId = generateTripId()
+
+    try {
+      const response = await fetch(`${API_URL}/trips/${syncCode}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          trip_id: tripId,
+          query,
+          summary: tripSummary,
+          days: tripDays
+        })
+      })
+
+      if (response.ok) {
+        const trip = {
+          id: tripId,
+          query,
+          summary: tripSummary,
+          days: tripDays,
+          savedAt: new Date().toISOString()
+        }
+        setSavedTrips([trip, ...savedTrips])
+        setShareMessage("Trip saved!")
+        setTimeout(() => setShareMessage(""), 2000)
+      }
+    } catch (err) {
+      console.log("Failed to save trip:", err)
+    }
   }
 
   const loadTrip = (trip) => {
@@ -246,10 +293,15 @@ function App(){
     setResults(allPlaces)
   }
 
-  const deleteTrip = (tripId) => {
-    const newSavedTrips = savedTrips.filter(t => t.id !== tripId)
-    setSavedTrips(newSavedTrips)
-    localStorage.setItem("savedTrips", JSON.stringify(newSavedTrips))
+  const deleteTrip = async (tripId) => {
+    if (!syncCode) return
+
+    try {
+      await fetch(`${API_URL}/trips/${syncCode}/${tripId}`, { method: 'DELETE' })
+      setSavedTrips(savedTrips.filter(t => t.id !== tripId))
+    } catch (err) {
+      console.log("Failed to delete trip:", err)
+    }
   }
 
   const [showAddStop, setShowAddStop] = useState(false)
@@ -373,26 +425,43 @@ function App(){
     URL.revokeObjectURL(url)
   }
 
-  const shareTrip = () => {
+  const shareTrip = async () => {
     if (!tripDays.length) return
+
+    if (!syncCode) {
+      setShowSyncModal(true)
+      return
+    }
 
     // Save first if not saved
     let tripId = savedTrips.find(t => t.summary === tripSummary)?.id
     if (!tripId) {
       tripId = generateTripId()
-      const trip = {
-        id: tripId,
-        query,
-        summary: tripSummary,
-        days: tripDays,
-        savedAt: new Date().toISOString()
+      try {
+        await fetch(`${API_URL}/trips/${syncCode}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            trip_id: tripId,
+            query,
+            summary: tripSummary,
+            days: tripDays
+          })
+        })
+        const trip = {
+          id: tripId,
+          query,
+          summary: tripSummary,
+          days: tripDays,
+          savedAt: new Date().toISOString()
+        }
+        setSavedTrips([trip, ...savedTrips])
+      } catch (err) {
+        console.log("Failed to save trip for sharing:", err)
       }
-      const newSavedTrips = [trip, ...savedTrips]
-      setSavedTrips(newSavedTrips)
-      localStorage.setItem("savedTrips", JSON.stringify(newSavedTrips))
     }
 
-    const url = `${window.location.origin}${window.location.pathname}?trip=${tripId}`
+    const url = `${window.location.origin}${window.location.pathname}?trip=${tripId}&sync=${syncCode}`
     navigator.clipboard.writeText(url)
     setShareMessage("Link copied!")
     setTimeout(() => setShareMessage(""), 2000)

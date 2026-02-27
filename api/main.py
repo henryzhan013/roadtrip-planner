@@ -71,6 +71,20 @@ class FavoritePlace(Base):
     photo_url = Column(String(1000))  # Google Places URLs can be long
     created_at = Column(DateTime, default=datetime.utcnow)
 
+
+class SavedTrip(Base):
+    """Database model for saved trips."""
+    __tablename__ = "trips"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    sync_code = Column(String(10), index=True, nullable=False)
+    trip_id = Column(String(20), nullable=False)  # Client-generated ID
+    query = Column(String(500))
+    summary = Column(String(500))
+    trip_data = Column(String(50000))  # JSON string of full trip
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 # Database engine and session (initialized in lifespan if DATABASE_URL is set)
 db_engine = None
 SessionLocal = None
@@ -689,5 +703,105 @@ def remove_favorite(sync_code: str, place_id: str):
         session.commit()
 
         return {"message": "Removed from favorites"}
+    finally:
+        session.close()
+
+
+# =============================================================================
+# TRIPS ENDPOINTS
+# =============================================================================
+
+class SaveTripRequest(BaseModel):
+    """Request model for saving a trip."""
+    trip_id: str
+    query: str
+    summary: str
+    days: list  # Full trip data
+
+
+@app.get("/trips/{sync_code}")
+def get_trips(sync_code: str):
+    """Get all saved trips for a sync code."""
+    if not SessionLocal:
+        raise HTTPException(status_code=503, detail="Database not configured")
+
+    session = SessionLocal()
+    try:
+        trips = session.query(SavedTrip).filter(
+            SavedTrip.sync_code == sync_code.upper()
+        ).order_by(SavedTrip.created_at.desc()).all()
+
+        return {
+            "sync_code": sync_code.upper(),
+            "trips": [
+                {
+                    "id": t.trip_id,
+                    "query": t.query,
+                    "summary": t.summary,
+                    "days": json.loads(t.trip_data),
+                    "savedAt": t.created_at.isoformat()
+                }
+                for t in trips
+            ]
+        }
+    finally:
+        session.close()
+
+
+@app.post("/trips/{sync_code}")
+def save_trip(sync_code: str, trip: SaveTripRequest):
+    """Save a trip."""
+    if not SessionLocal:
+        raise HTTPException(status_code=503, detail="Database not configured")
+
+    session = SessionLocal()
+    try:
+        # Check if trip already exists
+        existing = session.query(SavedTrip).filter(
+            SavedTrip.sync_code == sync_code.upper(),
+            SavedTrip.trip_id == trip.trip_id
+        ).first()
+
+        if existing:
+            return {"message": "Trip already saved", "id": existing.trip_id}
+
+        saved_trip = SavedTrip(
+            sync_code=sync_code.upper(),
+            trip_id=trip.trip_id,
+            query=trip.query,
+            summary=trip.summary,
+            trip_data=json.dumps(trip.days)
+        )
+        session.add(saved_trip)
+        session.commit()
+
+        return {"message": "Trip saved", "id": saved_trip.trip_id}
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        session.close()
+
+
+@app.delete("/trips/{sync_code}/{trip_id}")
+def delete_trip(sync_code: str, trip_id: str):
+    """Delete a saved trip."""
+    if not SessionLocal:
+        raise HTTPException(status_code=503, detail="Database not configured")
+
+    session = SessionLocal()
+    try:
+        trip = session.query(SavedTrip).filter(
+            SavedTrip.sync_code == sync_code.upper(),
+            SavedTrip.trip_id == trip_id
+        ).first()
+
+        if not trip:
+            raise HTTPException(status_code=404, detail="Trip not found")
+
+        session.delete(trip)
+        session.commit()
+
+        return {"message": "Trip deleted"}
     finally:
         session.close()
