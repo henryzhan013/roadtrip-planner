@@ -47,10 +47,13 @@ function App(){
   const [loading, setLoading] = useState(false)
   const [selectedPlace, setSelectedPlace] = useState(null)
   const [error, setError] = useState("")
-  const [favorites, setFavorites] = useState(() => {
-    const saved = localStorage.getItem("favorites")
-    return saved ? JSON.parse(saved) : []
+  const [favorites, setFavorites] = useState([])
+  const [syncCode, setSyncCode] = useState(() => {
+    return localStorage.getItem("syncCode") || ""
   })
+  const [showSyncModal, setShowSyncModal] = useState(false)
+  const [syncInput, setSyncInput] = useState("")
+  const [syncLoading, setSyncLoading] = useState(false)
   const [savedTrips, setSavedTrips] = useState(() => {
     const saved = localStorage.getItem("savedTrips")
     return saved ? JSON.parse(saved) : []
@@ -72,6 +75,50 @@ function App(){
       }
     }
   }, [])
+
+  // Load favorites when sync code is set
+  useEffect(() => {
+    if (syncCode) {
+      loadFavorites()
+    }
+  }, [syncCode])
+
+  const loadFavorites = async () => {
+    if (!syncCode) return
+    try {
+      const response = await fetch(`${API_URL}/favorites/${syncCode}`)
+      if (response.ok) {
+        const data = await response.json()
+        setFavorites(data.favorites.map(f => f.place_id))
+      }
+    } catch (err) {
+      console.log("Failed to load favorites:", err)
+    }
+  }
+
+  const createSyncCode = async () => {
+    setSyncLoading(true)
+    try {
+      const response = await fetch(`${API_URL}/sync/create`, { method: 'POST' })
+      const data = await response.json()
+      setSyncCode(data.sync_code)
+      localStorage.setItem("syncCode", data.sync_code)
+      setShowSyncModal(false)
+    } catch (err) {
+      console.log("Failed to create sync code:", err)
+    }
+    setSyncLoading(false)
+  }
+
+  const useSyncCode = () => {
+    if (syncInput.trim()) {
+      const code = syncInput.trim().toUpperCase()
+      setSyncCode(code)
+      localStorage.setItem("syncCode", code)
+      setShowSyncModal(false)
+      setSyncInput("")
+    }
+  }
 
   const handleSearch = async() => {
     setLoading(true)
@@ -126,15 +173,44 @@ function App(){
     setLoading(false)
   }
 
-  const toggleFavorite = (placeId) => {
-    let newFavorites
-    if(favorites.includes(placeId)){
-      newFavorites = favorites.filter(id => id !== placeId)
-    }else{
-      newFavorites = [...favorites, placeId]
+  const toggleFavorite = async (placeId, placeData = null) => {
+    if (!syncCode) {
+      setShowSyncModal(true)
+      return
     }
-    setFavorites(newFavorites)
-    localStorage.setItem("favorites", JSON.stringify(newFavorites))
+
+    if (favorites.includes(placeId)) {
+      // Remove from favorites
+      try {
+        await fetch(`${API_URL}/favorites/${syncCode}/${placeId}`, { method: 'DELETE' })
+        setFavorites(favorites.filter(id => id !== placeId))
+      } catch (err) {
+        console.log("Failed to remove favorite:", err)
+      }
+    } else {
+      // Add to favorites
+      if (placeData) {
+        try {
+          await fetch(`${API_URL}/favorites/${syncCode}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              place_id: placeId,
+              name: placeData.name,
+              address: placeData.address,
+              lat: placeData.lat,
+              lng: placeData.lng,
+              rating: placeData.rating,
+              category: placeData.category,
+              photo_url: placeData.photo_url
+            })
+          })
+          setFavorites([...favorites, placeId])
+        } catch (err) {
+          console.log("Failed to add favorite:", err)
+        }
+      }
+    }
   }
 
   const saveTrip = () => {
@@ -379,6 +455,18 @@ function App(){
 
     {/* Action Buttons */}
     <div className="action-buttons" style={{ display: "flex", justifyContent: "center", gap: "10px", marginBottom: "20px" }}>
+      <button onClick={() => setShowSyncModal(true)} style={{
+        padding: "8px 16px",
+        backgroundColor: syncCode ? "#4CAF50" : "#f0f0f0",
+        color: syncCode ? "white" : "#333",
+        border: "none",
+        borderRadius: "6px",
+        cursor: "pointer",
+        fontSize: "14px"
+      }}>
+        🔄 {syncCode ? `Sync: ${syncCode}` : "Enable Sync"}
+      </button>
+
       <button onClick={() => setShowSavedTrips(!showSavedTrips)} style={{
         padding: "8px 16px",
         backgroundColor: showSavedTrips ? "#666" : "#f0f0f0",
@@ -477,6 +565,141 @@ function App(){
             ))}
           </div>
         )}
+      </div>
+    )}
+
+    {/* Sync Code Modal */}
+    {showSyncModal && (
+      <div style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(0,0,0,0.5)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 1000
+      }}>
+        <div style={{
+          backgroundColor: "white",
+          borderRadius: "12px",
+          padding: "24px",
+          width: "90%",
+          maxWidth: "400px"
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px" }}>
+            <h3 style={{ margin: 0 }}>🔄 Sync Favorites</h3>
+            <button
+              onClick={() => setShowSyncModal(false)}
+              style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer" }}
+            >×</button>
+          </div>
+
+          {syncCode ? (
+            <div>
+              <p style={{ color: "#666", marginBottom: "15px" }}>
+                Your sync code is:
+              </p>
+              <div style={{
+                fontSize: "32px",
+                fontWeight: "bold",
+                textAlign: "center",
+                padding: "20px",
+                backgroundColor: "#f0f0f0",
+                borderRadius: "8px",
+                letterSpacing: "4px",
+                marginBottom: "15px"
+              }}>
+                {syncCode}
+              </div>
+              <p style={{ color: "#888", fontSize: "14px", textAlign: "center" }}>
+                Enter this code on another device to sync your favorites
+              </p>
+              <button
+                onClick={() => {
+                  setSyncCode("")
+                  localStorage.removeItem("syncCode")
+                  setFavorites([])
+                }}
+                style={{
+                  width: "100%",
+                  marginTop: "15px",
+                  padding: "10px",
+                  backgroundColor: "#f44336",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: "pointer"
+                }}
+              >
+                Disconnect
+              </button>
+            </div>
+          ) : (
+            <div>
+              <p style={{ color: "#666", marginBottom: "20px" }}>
+                Sync your favorites across devices. Create a new code or enter an existing one.
+              </p>
+
+              <button
+                onClick={createSyncCode}
+                disabled={syncLoading}
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  backgroundColor: "#4CAF50",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontSize: "16px",
+                  marginBottom: "20px"
+                }}
+              >
+                {syncLoading ? "Creating..." : "Create New Sync Code"}
+              </button>
+
+              <div style={{ textAlign: "center", color: "#888", marginBottom: "15px" }}>
+                — or enter existing code —
+              </div>
+
+              <div style={{ display: "flex", gap: "10px" }}>
+                <input
+                  value={syncInput}
+                  onChange={(e) => setSyncInput(e.target.value.toUpperCase())}
+                  placeholder="ABC123"
+                  maxLength={6}
+                  style={{
+                    flex: 1,
+                    padding: "12px",
+                    fontSize: "18px",
+                    textAlign: "center",
+                    letterSpacing: "4px",
+                    borderRadius: "6px",
+                    border: "1px solid #ccc",
+                    textTransform: "uppercase"
+                  }}
+                />
+                <button
+                  onClick={useSyncCode}
+                  disabled={syncInput.length < 6}
+                  style={{
+                    padding: "12px 20px",
+                    backgroundColor: syncInput.length >= 6 ? "#2196F3" : "#ccc",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "6px",
+                    cursor: syncInput.length >= 6 ? "pointer" : "default"
+                  }}
+                >
+                  Use
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     )}
 
@@ -863,7 +1086,7 @@ function App(){
                         style={{ fontSize: "18px", cursor: "pointer", marginLeft: "8px" }}
                         onClick={(e) => {
                           e.stopPropagation()
-                          toggleFavorite(activity.place.place_id)
+                          toggleFavorite(activity.place.place_id, activity.place)
                         }}
                       >
                         {favorites.includes(activity.place.place_id) ? "❤️" : "🤍"}
@@ -904,7 +1127,7 @@ function App(){
                 rank={index + 1}
                 onClick={() => setSelectedPlace(result)}
                 isFavorite={favorites.includes(result.place.place_id)}
-                onToggleFavorite={() => toggleFavorite(result.place.place_id)}
+                onToggleFavorite={() => toggleFavorite(result.place.place_id, result.place)}
               />
             ))}
           </>

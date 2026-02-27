@@ -24,6 +24,9 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from sqlalchemy import create_engine, Column, String, Float, Integer, DateTime
+from sqlalchemy.orm import sessionmaker, declarative_base
+from datetime import datetime
 
 # Load environment variables
 load_dotenv()
@@ -34,6 +37,7 @@ load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 GOOGLE_PLACES_API_KEY = os.getenv("GOOGLE_PLACES_API_KEY")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 # Rate limits
 OPENAI_RATE_LIMIT_PER_MINUTE = int(os.getenv("OPENAI_RATE_LIMIT_PER_MINUTE", "60"))
@@ -43,6 +47,33 @@ GOOGLE_RATE_LIMIT_PER_DAY = int(os.getenv("GOOGLE_RATE_LIMIT_PER_DAY", "1000"))
 
 # Cache TTL
 CACHE_TTL_SECONDS = 30 * 60  # 30 minutes
+
+
+# =============================================================================
+# DATABASE SETUP
+# =============================================================================
+
+Base = declarative_base()
+
+class FavoritePlace(Base):
+    """Database model for saved favorite places."""
+    __tablename__ = "favorites"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    sync_code = Column(String(10), index=True, nullable=False)
+    place_id = Column(String(255), nullable=False)
+    name = Column(String(255), nullable=False)
+    address = Column(String(500))
+    lat = Column(Float)
+    lng = Column(Float)
+    rating = Column(Float)
+    category = Column(String(100))
+    photo_url = Column(String(500))
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+# Database engine and session (initialized in lifespan if DATABASE_URL is set)
+db_engine = None
+SessionLocal = None
 
 
 # =============================================================================
@@ -365,7 +396,7 @@ async def search_google_places(query: str, max_results: int = 5) -> list[dict]:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize clients on startup, cleanup on shutdown."""
-    global openai_client, http_client
+    global openai_client, http_client, db_engine, SessionLocal
 
     # Validate API keys
     if not OPENAI_API_KEY:
@@ -377,6 +408,15 @@ async def lifespan(app: FastAPI):
     if not GOOGLE_PLACES_API_KEY:
         print("WARNING: GOOGLE_PLACES_API_KEY not set. Search endpoints will not work.")
 
+    # Initialize database
+    if DATABASE_URL:
+        db_engine = create_engine(DATABASE_URL)
+        SessionLocal = sessionmaker(bind=db_engine)
+        Base.metadata.create_all(db_engine)
+        print("Database connected")
+    else:
+        print("WARNING: DATABASE_URL not set. Favorites sync will not work.")
+
     http_client = httpx.AsyncClient(timeout=30.0)
     print("HTTP client initialized")
     print("Ready to serve requests!")
@@ -386,6 +426,8 @@ async def lifespan(app: FastAPI):
     # Cleanup
     if http_client:
         await http_client.aclose()
+    if db_engine:
+        db_engine.dispose()
     print("Shutting down...")
 
 
@@ -501,9 +543,145 @@ def health_check():
         "status": "healthy",
         "openai_configured": OPENAI_API_KEY is not None,
         "google_configured": GOOGLE_PLACES_API_KEY is not None,
+        "database_configured": DATABASE_URL is not None,
         "rate_limits": {
             "openai": openai_limiter.status(),
             "google": google_limiter.status(),
         },
         "cache_entries": len(places_cache.cache),
     }
+
+
+# =============================================================================
+# FAVORITES ENDPOINTS
+# =============================================================================
+
+class FavoritePlaceRequest(BaseModel):
+    """Request model for adding a favorite place."""
+    place_id: str
+    name: str
+    address: str | None = None
+    lat: float | None = None
+    lng: float | None = None
+    rating: float | None = None
+    category: str | None = None
+    photo_url: str | None = None
+
+
+class FavoritePlaceResponse(BaseModel):
+    """Response model for a favorite place."""
+    id: int
+    place_id: str
+    name: str
+    address: str | None
+    lat: float | None
+    lng: float | None
+    rating: float | None
+    category: str | None
+    photo_url: str | None
+
+
+def generate_sync_code() -> str:
+    """Generate a random 6-character sync code."""
+    import random
+    import string
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+
+
+@app.post("/sync/create")
+def create_sync_code():
+    """Generate a new sync code for a user."""
+    return {"sync_code": generate_sync_code()}
+
+
+@app.get("/favorites/{sync_code}")
+def get_favorites(sync_code: str):
+    """Get all favorites for a sync code."""
+    if not SessionLocal:
+        raise HTTPException(status_code=503, detail="Database not configured")
+
+    session = SessionLocal()
+    try:
+        favorites = session.query(FavoritePlace).filter(
+            FavoritePlace.sync_code == sync_code.upper()
+        ).all()
+
+        return {
+            "sync_code": sync_code.upper(),
+            "favorites": [
+                {
+                    "id": f.id,
+                    "place_id": f.place_id,
+                    "name": f.name,
+                    "address": f.address,
+                    "lat": f.lat,
+                    "lng": f.lng,
+                    "rating": f.rating,
+                    "category": f.category,
+                    "photo_url": f.photo_url,
+                }
+                for f in favorites
+            ]
+        }
+    finally:
+        session.close()
+
+
+@app.post("/favorites/{sync_code}")
+def add_favorite(sync_code: str, place: FavoritePlaceRequest):
+    """Add a place to favorites."""
+    if not SessionLocal:
+        raise HTTPException(status_code=503, detail="Database not configured")
+
+    session = SessionLocal()
+    try:
+        # Check if already favorited
+        existing = session.query(FavoritePlace).filter(
+            FavoritePlace.sync_code == sync_code.upper(),
+            FavoritePlace.place_id == place.place_id
+        ).first()
+
+        if existing:
+            return {"message": "Already in favorites", "id": existing.id}
+
+        favorite = FavoritePlace(
+            sync_code=sync_code.upper(),
+            place_id=place.place_id,
+            name=place.name,
+            address=place.address,
+            lat=place.lat,
+            lng=place.lng,
+            rating=place.rating,
+            category=place.category,
+            photo_url=place.photo_url,
+        )
+        session.add(favorite)
+        session.commit()
+
+        return {"message": "Added to favorites", "id": favorite.id}
+    finally:
+        session.close()
+
+
+@app.delete("/favorites/{sync_code}/{place_id}")
+def remove_favorite(sync_code: str, place_id: str):
+    """Remove a place from favorites."""
+    if not SessionLocal:
+        raise HTTPException(status_code=503, detail="Database not configured")
+
+    session = SessionLocal()
+    try:
+        favorite = session.query(FavoritePlace).filter(
+            FavoritePlace.sync_code == sync_code.upper(),
+            FavoritePlace.place_id == place_id
+        ).first()
+
+        if not favorite:
+            raise HTTPException(status_code=404, detail="Favorite not found")
+
+        session.delete(favorite)
+        session.commit()
+
+        return {"message": "Removed from favorites"}
+    finally:
+        session.close()
