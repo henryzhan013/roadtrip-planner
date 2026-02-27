@@ -68,7 +68,7 @@ class FavoritePlace(Base):
     lng = Column(Float)
     rating = Column(Float)
     category = Column(String(100))
-    photo_url = Column(String(500))
+    photo_url = Column(String(1000))  # Google Places URLs can be long
     created_at = Column(DateTime, default=datetime.utcnow)
 
 # Database engine and session (initialized in lifespan if DATABASE_URL is set)
@@ -644,6 +644,9 @@ def add_favorite(sync_code: str, place: FavoritePlaceRequest):
         if existing:
             return {"message": "Already in favorites", "id": existing.id}
 
+        # Truncate photo_url if too long (Google URLs can be 500+ chars)
+        photo_url = place.photo_url[:500] if place.photo_url else None
+
         favorite = FavoritePlace(
             sync_code=sync_code.upper(),
             place_id=place.place_id,
@@ -653,12 +656,15 @@ def add_favorite(sync_code: str, place: FavoritePlaceRequest):
             lng=place.lng,
             rating=place.rating,
             category=place.category,
-            photo_url=place.photo_url,
+            photo_url=photo_url,
         )
         session.add(favorite)
         session.commit()
 
         return {"message": "Added to favorites", "id": favorite.id}
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
     finally:
         session.close()
 
