@@ -57,9 +57,18 @@ function App(){
   const [savedTrips, setSavedTrips] = useState([])
   const [showSavedTrips, setShowSavedTrips] = useState(false)
   const [mode, setMode] = useState("search")
-  const [shareMessage, setShareMessage] = useState("")
   const [routeInfo, setRouteInfo] = useState(null)
   const [mapView, setMapView] = useState("daily") // "daily" or "fullTrip"
+  const [toasts, setToasts] = useState([])
+
+  // Toast notification helper
+  const showToast = (message, type = 'success') => {
+    const id = Date.now()
+    setToasts(prev => [...prev, { id, message, type }])
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id))
+    }, 3000)
+  }
 
   // Load trip from URL on mount
   // Load trip from URL on mount
@@ -270,8 +279,7 @@ function App(){
           savedAt: new Date().toISOString()
         }
         setSavedTrips([trip, ...savedTrips])
-        setShareMessage("Trip saved!")
-        setTimeout(() => setShareMessage(""), 2000)
+        showToast("Trip saved!")
       }
     } catch (err) {
       console.log("Failed to save trip:", err)
@@ -463,171 +471,103 @@ function App(){
 
     const url = `${window.location.origin}${window.location.pathname}?trip=${tripId}&sync=${syncCode}`
     navigator.clipboard.writeText(url)
-    setShareMessage("Link copied!")
-    setTimeout(() => setShareMessage(""), 2000)
+    showToast("Link copied to clipboard!")
   }
 
   return (
-  <div className="main-container" style={{
-    padding: "20px",
-    backgroundColor: "#f5f5f5",
-    minHeight: "100vh"
-  }}>
-    <h1 style={{ textAlign: "center", color: "#333" }}>🚗 Road Trip Planner</h1>
+  <div className="main-container" style={{ minHeight: "100vh" }}>
+    {/* Header */}
+    <header className="app-header">
+      <h1>Road Trip Planner</h1>
+      <p>Plan your perfect road trip with AI-powered recommendations</p>
+    </header>
 
-    <p style={{ textAlign: "center", color: "#666", marginBottom: "20px"}}>
-      Plan your perfect road trip with AI-powered recommendations
-    </p>
-
-    {/* Search Bar */}
-    <div className="search-container" style={{ display: "flex", justifyContent: "center", marginBottom: "15px" }}>
-      <input
-        className="search-input"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && handlePlanTrip()}
-        placeholder="e.g. '5 day roadtrip florida beaches and seafood'"
-        style={{
-          padding: "12px",
-          width: "400px",
-          marginRight: "10px",
-          borderRadius: "8px",
-          border: "1px solid #ccc",
-          fontSize: "16px"
-        }}
-      />
-      <div className="search-buttons" style={{ display: "flex", gap: "10px" }}>
-        <button onClick={handleSearch} style={{
-          padding: "12px 24px",
-          backgroundColor: "#4CAF50",
-          color: "white",
-          border: "none",
-          borderRadius: "8px",
-          cursor: "pointer",
-          fontSize: "16px"
-        }}>
+    {/* Search Section */}
+    <div className="search-section">
+      <div className="search-row">
+        <input
+          className="input"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handlePlanTrip()}
+          placeholder="e.g. '5 day roadtrip florida beaches and seafood'"
+        />
+        <button onClick={handleSearch} className="btn btn-secondary">
           Search
         </button>
-        <button onClick={handlePlanTrip} style={{
-          padding: "12px 24px",
-          backgroundColor: "#2196F3",
-          color: "white",
-          border: "none",
-          borderRadius: "8px",
-          cursor: "pointer",
-          fontSize: "16px"
-        }}>
+        <button onClick={handlePlanTrip} className="btn btn-primary">
           Plan Trip
         </button>
       </div>
     </div>
 
-    {/* Action Buttons */}
-    <div className="action-buttons" style={{ display: "flex", justifyContent: "center", gap: "10px", marginBottom: "20px" }}>
-      <button onClick={() => setShowSyncModal(true)} style={{
-        padding: "8px 16px",
-        backgroundColor: syncCode ? "#4CAF50" : "#f0f0f0",
-        color: syncCode ? "white" : "#333",
-        border: "none",
-        borderRadius: "6px",
-        cursor: "pointer",
-        fontSize: "14px"
-      }}>
-        🔄 {syncCode ? `Sync: ${syncCode}` : "Enable Sync"}
+    {/* Action Bar */}
+    <div className="action-bar">
+      <button
+        onClick={() => setShowSyncModal(true)}
+        className={`btn btn-sm ${syncCode ? 'btn-secondary' : 'btn-ghost'}`}
+      >
+        {syncCode ? `🔄 Sync: ${syncCode}` : "🔄 Enable Sync"}
       </button>
 
-      <button onClick={() => setShowSavedTrips(!showSavedTrips)} style={{
-        padding: "8px 16px",
-        backgroundColor: showSavedTrips ? "#666" : "#f0f0f0",
-        color: showSavedTrips ? "white" : "#333",
-        border: "none",
-        borderRadius: "6px",
-        cursor: "pointer",
-        fontSize: "14px"
-      }}>
+      <button
+        onClick={() => setShowSavedTrips(!showSavedTrips)}
+        className={`btn btn-sm ${showSavedTrips ? 'btn-ghost active' : 'btn-ghost'}`}
+      >
         📁 My Trips ({savedTrips.length})
       </button>
 
       {tripDays.length > 0 && (
         <>
-          <button onClick={saveTrip} style={{
-            padding: "8px 16px",
-            backgroundColor: "#f0f0f0",
-            color: "#333",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontSize: "14px"
-          }}>
+          <button onClick={saveTrip} className="btn btn-sm btn-ghost">
             💾 Save
           </button>
-          <button onClick={shareTrip} style={{
-            padding: "8px 16px",
-            backgroundColor: "#f0f0f0",
-            color: "#333",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontSize: "14px"
-          }}>
+          <button onClick={shareTrip} className="btn btn-sm btn-ghost">
             🔗 Share
           </button>
-          <button onClick={exportTrip} style={{
-            padding: "8px 16px",
-            backgroundColor: "#f0f0f0",
-            color: "#333",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontSize: "14px"
-          }}>
+          <button onClick={exportTrip} className="btn btn-sm btn-ghost">
             📄 Export
           </button>
         </>
       )}
 
-      {shareMessage && (
-        <span style={{ color: "#4CAF50", alignSelf: "center", fontWeight: "500" }}>
-          ✓ {shareMessage}
-        </span>
-      )}
     </div>
+
+    {/* Toast Notifications */}
+    {toasts.length > 0 && (
+      <div className="toast-container">
+        {toasts.map(toast => (
+          <div key={toast.id} className={`toast toast-${toast.type}`}>
+            {toast.type === 'success' ? '✓' : '!'} {toast.message}
+          </div>
+        ))}
+      </div>
+    )}
+
+    {/* Content Wrapper */}
+    <div className="content-wrapper">
 
     {/* Saved Trips Panel */}
     {showSavedTrips && (
-      <div style={{
-        backgroundColor: "white",
-        borderRadius: "12px",
-        padding: "16px",
-        marginBottom: "20px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
-      }}>
-        <h3 style={{ margin: "0 0 12px 0", color: "#333" }}>Saved Trips</h3>
+      <div className="saved-trips-panel">
+        <h3>Saved Trips</h3>
         {savedTrips.length === 0 ? (
-          <p style={{ color: "#666" }}>No saved trips yet. Plan a trip and save it!</p>
+          <div className="empty-state">
+            <div className="empty-state-icon">📁</div>
+            <div className="empty-state-text">No saved trips yet</div>
+            <div className="empty-state-hint">Plan a trip and save it to see it here</div>
+          </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          <div>
             {savedTrips.map(trip => (
-              <div key={trip.id} style={{
-                display: "flex",
-                alignItems: "center",
-                padding: "12px",
-                backgroundColor: "#f9f9f9",
-                borderRadius: "8px"
-              }}>
-                <div style={{ flex: 1, cursor: "pointer" }} onClick={() => loadTrip(trip)}>
-                  <div style={{ fontWeight: "600", color: "#333" }}>{trip.summary}</div>
-                  <div style={{ fontSize: "12px", color: "#888" }}>
+              <div key={trip.id} className="saved-trip-item" onClick={() => loadTrip(trip)}>
+                <div className="saved-trip-info">
+                  <div className="saved-trip-title">{trip.summary}</div>
+                  <div className="saved-trip-meta">
                     {new Date(trip.savedAt).toLocaleDateString()} • {trip.days.length} days
                   </div>
                 </div>
-                <button onClick={() => deleteTrip(trip.id)} style={{
-                  padding: "4px 8px",
-                  backgroundColor: "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                  fontSize: "16px"
-                }}>
+                <button onClick={(e) => { e.stopPropagation(); deleteTrip(trip.id) }} className="delete-btn">
                   🗑️
                 </button>
               </div>
@@ -639,51 +579,22 @@ function App(){
 
     {/* Sync Code Modal */}
     {showSyncModal && (
-      <div style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: "rgba(0,0,0,0.5)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000
-      }}>
-        <div style={{
-          backgroundColor: "white",
-          borderRadius: "12px",
-          padding: "24px",
-          width: "90%",
-          maxWidth: "400px"
-        }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px" }}>
-            <h3 style={{ margin: 0 }}>🔄 Sync Favorites</h3>
-            <button
-              onClick={() => setShowSyncModal(false)}
-              style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer" }}
-            >×</button>
+      <div className="modal-overlay">
+        <div className="modal">
+          <div className="modal-header">
+            <h3>🔄 Sync Favorites</h3>
+            <button onClick={() => setShowSyncModal(false)} className="modal-close">×</button>
           </div>
 
           {syncCode ? (
             <div>
-              <p style={{ color: "#666", marginBottom: "15px" }}>
+              <p style={{ color: "var(--gray-600)", marginBottom: "16px" }}>
                 Your sync code is:
               </p>
-              <div style={{
-                fontSize: "32px",
-                fontWeight: "bold",
-                textAlign: "center",
-                padding: "20px",
-                backgroundColor: "#f0f0f0",
-                borderRadius: "8px",
-                letterSpacing: "4px",
-                marginBottom: "15px"
-              }}>
+              <div className="sync-code-display">
                 {syncCode}
               </div>
-              <p style={{ color: "#888", fontSize: "14px", textAlign: "center" }}>
+              <p style={{ color: "var(--gray-500)", fontSize: "14px", textAlign: "center", marginBottom: "16px" }}>
                 Enter this code on another device to sync your favorites
               </p>
               <button
@@ -692,15 +603,11 @@ function App(){
                   localStorage.removeItem("syncCode")
                   setFavorites([])
                 }}
+                className="btn"
                 style={{
                   width: "100%",
-                  marginTop: "15px",
-                  padding: "10px",
-                  backgroundColor: "#f44336",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "6px",
-                  cursor: "pointer"
+                  background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+                  color: "white"
                 }}
               >
                 Disconnect
@@ -708,29 +615,20 @@ function App(){
             </div>
           ) : (
             <div>
-              <p style={{ color: "#666", marginBottom: "20px" }}>
+              <p style={{ color: "var(--gray-600)", marginBottom: "20px" }}>
                 Sync your favorites across devices. Create a new code or enter an existing one.
               </p>
 
               <button
                 onClick={createSyncCode}
                 disabled={syncLoading}
-                style={{
-                  width: "100%",
-                  padding: "12px",
-                  backgroundColor: "#4CAF50",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  fontSize: "16px",
-                  marginBottom: "20px"
-                }}
+                className="btn btn-secondary"
+                style={{ width: "100%", marginBottom: "20px" }}
               >
                 {syncLoading ? "Creating..." : "Create New Sync Code"}
               </button>
 
-              <div style={{ textAlign: "center", color: "#888", marginBottom: "15px" }}>
+              <div style={{ textAlign: "center", color: "var(--gray-400)", marginBottom: "16px" }}>
                 — or enter existing code —
               </div>
 
@@ -740,28 +638,21 @@ function App(){
                   onChange={(e) => setSyncInput(e.target.value.toUpperCase())}
                   placeholder="ABC123"
                   maxLength={6}
+                  className="input"
                   style={{
                     flex: 1,
-                    padding: "12px",
-                    fontSize: "18px",
                     textAlign: "center",
-                    letterSpacing: "4px",
-                    borderRadius: "6px",
-                    border: "1px solid #ccc",
+                    letterSpacing: "6px",
+                    fontSize: "18px",
+                    fontWeight: "600",
                     textTransform: "uppercase"
                   }}
                 />
                 <button
                   onClick={useSyncCode}
                   disabled={syncInput.length < 6}
-                  style={{
-                    padding: "12px 20px",
-                    backgroundColor: syncInput.length >= 6 ? "#2196F3" : "#ccc",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "6px",
-                    cursor: syncInput.length >= 6 ? "pointer" : "default"
-                  }}
+                  className="btn btn-primary"
+                  style={{ opacity: syncInput.length >= 6 ? 1 : 0.5 }}
                 >
                   Use
                 </button>
@@ -773,28 +664,36 @@ function App(){
     )}
 
     {loading && (
-      <p style={{ textAlign: "center", color: "#333" }}>
-        🔄 {mode === "plan" ? "Planning your trip..." : "Searching..."}
-      </p>
+      <div className="loading-container">
+        <div className="spinner spinner-lg"></div>
+        <div className="loading-text">
+          {mode === "plan" ? "Planning your trip" : "Searching"}<span className="loading-dots"></span>
+        </div>
+      </div>
     )}
 
-    {error && <p style={{ textAlign: "center", color: "red"}}>{error}</p>}
+    {error && (
+      <div style={{
+        textAlign: "center",
+        padding: "16px 24px",
+        background: "#fef2f2",
+        color: "#dc2626",
+        borderRadius: "var(--radius)",
+        margin: "0 0 20px 0",
+        border: "1px solid #fecaca"
+      }}>
+        {error}
+      </div>
+    )}
 
     {/* Trip Summary */}
     {tripSummary && (
-      <div style={{
-        backgroundColor: "#e3f2fd",
-        padding: "15px 20px",
-        borderRadius: "8px",
-        marginBottom: "20px",
-        textAlign: "center"
-      }}>
-        <strong style={{ color: "#1976d2" }}>📍 {tripSummary}</strong>
+      <div className="trip-summary">
+        <div className="trip-summary-title">📍 {tripSummary}</div>
         {routeInfo && (
-          <div style={{ marginTop: "8px", fontSize: "14px", color: "#666" }}>
-            🚗 {Math.round(routeInfo.distance / 1609.34)} miles total
-            &nbsp;•&nbsp;
-            ⏱️ {Math.floor(routeInfo.duration / 3600)}h {Math.round((routeInfo.duration % 3600) / 60)}m driving time
+          <div className="trip-summary-stats">
+            <span>🚗 {Math.round(routeInfo.distance / 1609.34)} miles total</span>
+            <span>⏱️ {Math.floor(routeInfo.duration / 3600)}h {Math.round((routeInfo.duration % 3600) / 60)}m driving</span>
           </div>
         )}
       </div>
@@ -802,44 +701,23 @@ function App(){
 
     {/* Selected Place Detail */}
     {selectedPlace && (
-      <div style={{
-        border: "2px solid #4CAF50",
-        padding: "20px",
-        margin: "20px 0",
-        backgroundColor: "white",
-        borderRadius: "8px",
-        color: "#333",
-        display: "flex",
-        gap: "20px"
-      }}>
+      <div className="place-detail">
         {selectedPlace.place.photo_url && (
           <img
             src={selectedPlace.place.photo_url}
             alt={selectedPlace.place.name}
-            style={{
-              width: "200px",
-              height: "150px",
-              objectFit: "cover",
-              borderRadius: "8px"
-            }}
+            className="place-detail-image"
           />
         )}
-        <div style={{ flex: 1 }}>
-          <h2 style={{ marginTop: 0 }}>{selectedPlace.place.name}</h2>
+        <div className="place-detail-content">
+          <h2>{selectedPlace.place.name}</h2>
           <p>📍 {selectedPlace.place.address}</p>
           {selectedPlace.place.rating && (
             <p>⭐ {selectedPlace.place.rating} ({selectedPlace.place.rating_count} reviews)</p>
           )}
           <p>🏷️ {selectedPlace.place.category}</p>
           {selectedPlace.place.why && <p>💡 {selectedPlace.place.why}</p>}
-          <button onClick={() => setSelectedPlace(null)} style={{
-            padding: "8px 16px",
-            backgroundColor: "#666",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer"
-          }}>
+          <button onClick={() => setSelectedPlace(null)} className="btn btn-ghost" style={{ marginTop: "12px" }}>
             Close
           </button>
         </div>
@@ -848,111 +726,64 @@ function App(){
 
     {/* Add Custom Stop Modal */}
     {showAddStop && (
-      <div style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: "rgba(0,0,0,0.5)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000
-      }}>
-        <div style={{
-          backgroundColor: "white",
-          borderRadius: "12px",
-          padding: "20px",
-          width: "90%",
-          maxWidth: "500px",
-          maxHeight: "80vh",
-          overflow: "auto"
-        }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "15px" }}>
-            <h3 style={{ margin: 0 }}>Add Stop to Day {addStopDay + 1}</h3>
+      <div className="modal-overlay">
+        <div className="modal" style={{ maxWidth: "520px", maxHeight: "80vh", overflow: "auto" }}>
+          <div className="modal-header">
+            <h3>Add Stop to Day {addStopDay + 1}</h3>
             <button
               onClick={() => { setShowAddStop(false); setCustomStopResults([]) }}
-              style={{ background: "none", border: "none", fontSize: "20px", cursor: "pointer" }}
+              className="modal-close"
             >×</button>
           </div>
 
-          <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
+          <div style={{ display: "flex", gap: "10px", marginBottom: "16px" }}>
             <input
               value={customStopQuery}
               onChange={(e) => setCustomStopQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && searchCustomStop()}
               placeholder="Search for a place..."
-              style={{
-                flex: 1,
-                padding: "10px",
-                borderRadius: "6px",
-                border: "1px solid #ccc"
-              }}
+              className="input"
+              style={{ flex: 1 }}
             />
             <button
               onClick={searchCustomStop}
               disabled={searchingCustom}
-              style={{
-                padding: "10px 20px",
-                backgroundColor: "#2196F3",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer"
-              }}
+              className="btn btn-primary"
             >
               {searchingCustom ? "..." : "Search"}
             </button>
           </div>
 
           {customStopResults.length > 0 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               {customStopResults.map(place => (
                 <div
                   key={place.place_id}
+                  className="card"
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    padding: "10px",
-                    backgroundColor: "#f9f9f9",
-                    borderRadius: "8px",
-                    gap: "10px"
+                    padding: "12px",
+                    gap: "12px"
                   }}
                 >
                   {place.photo_url && (
                     <img
                       src={place.photo_url}
                       alt={place.name}
-                      style={{ width: "50px", height: "50px", objectFit: "cover", borderRadius: "6px" }}
+                      style={{ width: "56px", height: "56px", objectFit: "cover", borderRadius: "var(--radius)" }}
                     />
                   )}
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: "600" }}>{place.name}</div>
-                    <div style={{ fontSize: "12px", color: "#666" }}>{place.address}</div>
-                    {place.rating && <div style={{ fontSize: "12px" }}>⭐ {place.rating}</div>}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: "600", color: "var(--gray-800)" }}>{place.name}</div>
+                    <div style={{ fontSize: "12px", color: "var(--gray-500)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{place.address}</div>
+                    {place.rating && <div style={{ fontSize: "12px", color: "var(--gray-600)" }}>⭐ {place.rating}</div>}
                   </div>
-                  <div style={{ display: "flex", gap: "5px" }}>
-                    <button
-                      onClick={() => addCustomStop(place, "food")}
-                      style={{ padding: "5px 10px", borderRadius: "4px", border: "1px solid #ddd", cursor: "pointer" }}
-                      title="Add as food"
-                    >🍽️</button>
-                    <button
-                      onClick={() => addCustomStop(place, "attraction")}
-                      style={{ padding: "5px 10px", borderRadius: "4px", border: "1px solid #ddd", cursor: "pointer" }}
-                      title="Add as attraction"
-                    >🏛️</button>
-                    <button
-                      onClick={() => addCustomStop(place, "activity")}
-                      style={{ padding: "5px 10px", borderRadius: "4px", border: "1px solid #ddd", cursor: "pointer" }}
-                      title="Add as activity"
-                    >🎯</button>
-                    <button
-                      onClick={() => addCustomStop(place, "hotel")}
-                      style={{ padding: "5px 10px", borderRadius: "4px", border: "1px solid #ddd", cursor: "pointer" }}
-                      title="Add as hotel"
-                    >🏨</button>
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    <button onClick={() => addCustomStop(place, "food")} className="btn btn-icon btn-ghost" title="Add as food">🍽️</button>
+                    <button onClick={() => addCustomStop(place, "attraction")} className="btn btn-icon btn-ghost" title="Add as attraction">🏛️</button>
+                    <button onClick={() => addCustomStop(place, "activity")} className="btn btn-icon btn-ghost" title="Add as activity">🎯</button>
+                    <button onClick={() => addCustomStop(place, "hotel")} className="btn btn-icon btn-ghost" title="Add as hotel">🏨</button>
                   </div>
                 </div>
               ))}
@@ -962,62 +793,30 @@ function App(){
       </div>
     )}
 
-    <div className="content-layout" style={{ display: "flex", gap: "20px" }}>
+    <div className="content-layout">
       {/* Left Panel */}
-      <div className="itinerary-panel" style={{ flex: 1, maxHeight: "700px", overflowY: "auto" }}>
+      <div className="itinerary-panel">
         {mode === "plan" && tripDays.length > 0 ? (
           tripDays.map((day, dayIndex) => (
-            <div key={`day-${day.day}`} style={{
-              marginBottom: "20px",
-              backgroundColor: "white",
-              borderRadius: "12px",
-              overflow: "hidden",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)"
-            }}>
-              <div style={{
-                backgroundColor: "#2196F3",
-                color: "white",
-                padding: "12px 16px",
-                fontWeight: "bold",
-                fontSize: "16px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center"
-              }}>
+            <div key={`day-${day.day}`} className="day-card">
+              <div className="day-header">
                 <span>Day {day.day}: {day.date_label}</span>
                 <button
                   onClick={() => { setAddStopDay(dayIndex); setShowAddStop(true) }}
-                  style={{
-                    padding: "4px 10px",
-                    backgroundColor: "rgba(255,255,255,0.2)",
-                    color: "white",
-                    border: "1px solid rgba(255,255,255,0.3)",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    fontSize: "12px"
-                  }}
+                  className="btn btn-sm"
                 >
                   + Add Stop
                 </button>
               </div>
 
-              <div style={{ padding: "8px" }}>
+              <div>
                 {day.activities.map((activity, idx) => (
                   <div
                     key={`${day.day}-${idx}`}
-                    style={{
-                      display: "flex",
-                      alignItems: "flex-start",
-                      padding: "12px",
-                      borderBottom: idx < day.activities.length - 1 ? "1px solid #eee" : "none",
-                      cursor: activity.place ? "pointer" : "default",
-                      backgroundColor: activity.place ? "#fafafa" : "transparent",
-                      borderRadius: "8px",
-                      margin: "4px 0"
-                    }}
+                    className={`activity-card ${activity.place ? 'with-place' : ''}`}
                     onClick={() => activity.place && setSelectedPlace({ place: activity.place })}
                   >
-                    <div style={{ fontSize: "24px", marginRight: "12px", minWidth: "32px" }}>
+                    <div className="activity-icon">
                       {activityIcons[activity.activity_type] || '📍'}
                     </div>
 
@@ -1026,51 +825,38 @@ function App(){
                       <img
                         src={activity.place.photo_url}
                         alt={activity.place.name}
-                        style={{
-                          width: "80px",
-                          height: "60px",
-                          objectFit: "cover",
-                          borderRadius: "6px",
-                          marginRight: "12px"
-                        }}
+                        className="activity-photo"
                       />
                     )}
 
-                    <div style={{ flex: 1 }}>
+                    <div className="activity-content">
                       {activity.place ? (
                         <>
-                          <div style={{ fontWeight: "600", color: "#333", marginBottom: "4px" }}>
+                          <div className="activity-name">
                             {activity.place.name}
                           </div>
-                          <div style={{ fontSize: "13px", color: "#666" }}>
+                          <div className="activity-desc">
                             {activity.description}
                           </div>
-                          <div style={{ fontSize: "12px", color: "#888", marginTop: "4px" }}>
-                            📍 {activity.place.address}
+                          <div className="activity-meta">
+                            <span>📍 {activity.place.address}</span>
                             {activity.place.rating && (
-                              <span style={{ marginLeft: "10px" }}>⭐ {activity.place.rating}</span>
+                              <span>⭐ {activity.place.rating}</span>
                             )}
                             {activity.place.price_level && (
-                              <span style={{ marginLeft: "10px", color: "#4CAF50" }}>
+                              <span style={{ color: "var(--secondary)" }}>
                                 {priceLevels[activity.place.price_level]}
                               </span>
                             )}
                           </div>
                           {/* Booking & Map Links */}
-                          <div style={{ marginTop: "6px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                          <div className="link-pills">
                             <a
                               href={getPlaceLinks(activity.place).googleMaps}
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
-                              style={{
-                                fontSize: "11px",
-                                color: "#1a73e8",
-                                textDecoration: "none",
-                                padding: "3px 8px",
-                                backgroundColor: "#e8f0fe",
-                                borderRadius: "4px"
-                              }}
+                              className="link-pill link-pill-blue"
                             >
                               📍 Map
                             </a>
@@ -1079,14 +865,7 @@ function App(){
                               target="_blank"
                               rel="noopener noreferrer"
                               onClick={(e) => e.stopPropagation()}
-                              style={{
-                                fontSize: "11px",
-                                color: "#1a73e8",
-                                textDecoration: "none",
-                                padding: "3px 8px",
-                                backgroundColor: "#e8f0fe",
-                                borderRadius: "4px"
-                              }}
+                              className="link-pill link-pill-blue"
                             >
                               🚗 Directions
                             </a>
@@ -1096,14 +875,7 @@ function App(){
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={(e) => e.stopPropagation()}
-                                style={{
-                                  fontSize: "11px",
-                                  color: "#fff",
-                                  textDecoration: "none",
-                                  padding: "3px 8px",
-                                  backgroundColor: "#4CAF50",
-                                  borderRadius: "4px"
-                                }}
+                                className="link-pill link-pill-green"
                               >
                                 📅 Book
                               </a>
@@ -1112,7 +884,7 @@ function App(){
                         </>
                       ) : (
                         <div style={{
-                          color: "#555",
+                          color: "var(--gray-600)",
                           fontStyle: activity.activity_type === "drive" ? "italic" : "normal"
                         }}>
                           {activity.description}
@@ -1121,59 +893,35 @@ function App(){
                     </div>
 
                     {/* Reorder buttons */}
-                    <div style={{ display: "flex", flexDirection: "column", marginLeft: "8px", gap: "2px" }}>
+                    <div className="reorder-buttons">
                       <button
                         onClick={(e) => { e.stopPropagation(); moveActivity(dayIndex, idx, -1) }}
                         disabled={idx === 0}
-                        style={{
-                          padding: "2px 6px",
-                          fontSize: "10px",
-                          cursor: idx === 0 ? "default" : "pointer",
-                          opacity: idx === 0 ? 0.3 : 1,
-                          border: "1px solid #ddd",
-                          borderRadius: "3px",
-                          backgroundColor: "#fff"
-                        }}
+                        className="reorder-btn"
                       >▲</button>
                       <button
                         onClick={(e) => { e.stopPropagation(); moveActivity(dayIndex, idx, 1) }}
                         disabled={idx === day.activities.length - 1}
-                        style={{
-                          padding: "2px 6px",
-                          fontSize: "10px",
-                          cursor: idx === day.activities.length - 1 ? "default" : "pointer",
-                          opacity: idx === day.activities.length - 1 ? 0.3 : 1,
-                          border: "1px solid #ddd",
-                          borderRadius: "3px",
-                          backgroundColor: "#fff"
-                        }}
+                        className="reorder-btn"
                       >▼</button>
                     </div>
 
                     {activity.place && (
-                      <span
-                        style={{ fontSize: "18px", cursor: "pointer", marginLeft: "8px" }}
+                      <button
+                        className={`favorite-btn ${favorites.includes(activity.place.place_id) ? 'favorited' : ''}`}
                         onClick={(e) => {
                           e.stopPropagation()
                           toggleFavorite(activity.place.place_id, activity.place)
                         }}
                       >
                         {favorites.includes(activity.place.place_id) ? "❤️" : "🤍"}
-                      </span>
+                      </button>
                     )}
 
                     {/* Delete button */}
                     <button
                       onClick={(e) => { e.stopPropagation(); removeActivity(dayIndex, idx) }}
-                      style={{
-                        marginLeft: "8px",
-                        padding: "4px 8px",
-                        backgroundColor: "transparent",
-                        border: "none",
-                        cursor: "pointer",
-                        fontSize: "14px",
-                        opacity: 0.5
-                      }}
+                      className="delete-btn"
                       title="Remove"
                     >🗑️</button>
                   </div>
@@ -1184,9 +932,16 @@ function App(){
         ) : (
           <>
             {results.length > 0 && (
-              <p style={{ color: "#666", marginBottom: "10px" }}>
+              <p style={{ color: "var(--gray-500)", marginBottom: "12px" }}>
                 Showing {results.length} places
               </p>
+            )}
+            {results.length === 0 && !loading && (
+              <div className="empty-state">
+                <div className="empty-state-icon">🗺️</div>
+                <div className="empty-state-text">Ready to plan your adventure?</div>
+                <div className="empty-state-hint">Enter a destination above and click "Plan Trip"</div>
+              </div>
             )}
             {results.map((result, index) => (
               <Placecard
@@ -1204,34 +959,18 @@ function App(){
       </div>
 
       {/* Right Panel - Map */}
-      <div className="map-panel" style={{ flex: 2, minWidth: 0 }}>
+      <div className="map-panel">
         {tripDays.length > 1 && (
-          <div style={{ marginBottom: "10px", display: "flex", gap: "10px" }}>
+          <div className="map-toggle">
             <button
               onClick={() => setMapView("daily")}
-              style={{
-                padding: "8px 16px",
-                backgroundColor: mapView === "daily" ? "#2196F3" : "#f0f0f0",
-                color: mapView === "daily" ? "white" : "#333",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontSize: "14px"
-              }}
+              className={`btn btn-sm ${mapView === "daily" ? 'btn-primary' : 'btn-ghost'}`}
             >
               Day-by-Day
             </button>
             <button
               onClick={() => setMapView("fullTrip")}
-              style={{
-                padding: "8px 16px",
-                backgroundColor: mapView === "fullTrip" ? "#2196F3" : "#f0f0f0",
-                color: mapView === "fullTrip" ? "white" : "#333",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontSize: "14px"
-              }}
+              className={`btn btn-sm ${mapView === "fullTrip" ? 'btn-primary' : 'btn-ghost'}`}
             >
               🗺️ Full Trip Route
             </button>
@@ -1239,6 +978,7 @@ function App(){
         )}
         <Map results={results} tripDays={tripDays} onSelectPlace={setSelectedPlace} onRouteInfo={setRouteInfo} mapView={mapView} />
       </div>
+    </div>
     </div>
   </div>
 )
