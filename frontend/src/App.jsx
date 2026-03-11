@@ -39,6 +39,59 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 // Generate simple ID for trips
 const generateTripId = () => Math.random().toString(36).substring(2, 10)
 
+// Skeleton Loading Component
+function SkeletonLoader() {
+  return (
+    <div>
+      {[1, 2].map(day => (
+        <div key={day} className="skeleton-card">
+          <div className="skeleton skeleton-header"></div>
+          {[1, 2, 3].map(activity => (
+            <div key={activity} className="skeleton-activity">
+              <div className="skeleton skeleton-icon"></div>
+              <div className="skeleton skeleton-photo"></div>
+              <div className="skeleton-content">
+                <div className="skeleton skeleton-title"></div>
+                <div className="skeleton skeleton-text"></div>
+                <div className="skeleton skeleton-text-short"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// Confetti Component
+function Confetti({ active }) {
+  if (!active) return null
+
+  const confettiPieces = Array.from({ length: 50 }, (_, i) => ({
+    id: i,
+    left: `${Math.random() * 100}%`,
+    delay: `${Math.random() * 0.5}s`,
+    size: `${8 + Math.random() * 8}px`
+  }))
+
+  return (
+    <div className="confetti-container">
+      {confettiPieces.map(piece => (
+        <div
+          key={piece.id}
+          className="confetti"
+          style={{
+            left: piece.left,
+            animationDelay: piece.delay,
+            width: piece.size,
+            height: piece.size
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
 function App(){
   const [query, setQuery] = useState("")
   const [results, setResults] = useState([])
@@ -60,6 +113,16 @@ function App(){
   const [routeInfo, setRouteInfo] = useState(null)
   const [mapView, setMapView] = useState("daily") // "daily" or "fullTrip"
   const [toasts, setToasts] = useState([])
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem("darkMode") === "true"
+  })
+  const [showConfetti, setShowConfetti] = useState(false)
+
+  // Apply dark mode on mount and change
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light')
+    localStorage.setItem("darkMode", darkMode)
+  }, [darkMode])
 
   // Toast notification helper
   const showToast = (message, type = 'success') => {
@@ -68,6 +131,12 @@ function App(){
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id))
     }, 3000)
+  }
+
+  // Trigger confetti
+  const triggerConfetti = () => {
+    setShowConfetti(true)
+    setTimeout(() => setShowConfetti(false), 3000)
   }
 
   // Load trip from URL on mount
@@ -280,6 +349,7 @@ function App(){
         }
         setSavedTrips([trip, ...savedTrips])
         showToast("Trip saved!")
+        triggerConfetti()
       }
     } catch (err) {
       console.log("Failed to save trip:", err)
@@ -476,6 +546,18 @@ function App(){
 
   return (
   <div className="main-container" style={{ minHeight: "100vh" }}>
+    {/* Dark Mode Toggle */}
+    <button
+      className="theme-toggle"
+      onClick={() => setDarkMode(!darkMode)}
+      title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+    >
+      {darkMode ? "☀️" : "🌙"}
+    </button>
+
+    {/* Confetti */}
+    <Confetti active={showConfetti} />
+
     {/* Header */}
     <header className="app-header">
       <h1>Road Trip Planner</h1>
@@ -663,11 +745,30 @@ function App(){
       </div>
     )}
 
-    {loading && (
+    {loading && mode === "plan" && (
+      <div className="content-wrapper">
+        <div className="loading-container" style={{ padding: "20px 0" }}>
+          <div className="spinner"></div>
+          <div className="loading-text">
+            Planning your trip<span className="loading-dots"></span>
+          </div>
+        </div>
+        <div className="content-layout">
+          <div className="itinerary-panel">
+            <SkeletonLoader />
+          </div>
+          <div className="map-panel">
+            <div className="skeleton" style={{ height: "700px", borderRadius: "var(--radius-lg)" }}></div>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {loading && mode !== "plan" && (
       <div className="loading-container">
         <div className="spinner spinner-lg"></div>
         <div className="loading-text">
-          {mode === "plan" ? "Planning your trip" : "Searching"}<span className="loading-dots"></span>
+          Searching<span className="loading-dots"></span>
         </div>
       </div>
     )}
