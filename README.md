@@ -2,6 +2,8 @@
 
 An AI-powered road trip planning application that helps you create personalized multi-day itineraries with real places, interactive maps, and driving routes.
 
+**Live Demo:** https://roadtriplanner.vercel.app/
+
 ## Features
 
 - **AI-Powered Planning** - Describe your ideal trip in natural language (e.g., "5 day Florida beaches and seafood") and get a complete itinerary
