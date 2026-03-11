@@ -933,6 +933,9 @@ function App(){
                     <div className="activity-content">
                       {activity.place ? (
                         <>
+                          {activity.time_slot && (
+                            <div className="activity-time">{activity.time_slot}</div>
+                          )}
                           <div className="activity-name">
                             {activity.place.name}
                           </div>
@@ -984,11 +987,16 @@ function App(){
                           </div>
                         </>
                       ) : (
-                        <div style={{
-                          color: "var(--gray-600)",
-                          fontStyle: activity.activity_type === "drive" ? "italic" : "normal"
-                        }}>
-                          {activity.description}
+                        <div>
+                          {activity.time_slot && (
+                            <div className="activity-time">{activity.time_slot}</div>
+                          )}
+                          <div style={{
+                            color: "var(--gray-600)",
+                            fontStyle: activity.activity_type === "drive" ? "italic" : "normal"
+                          }}>
+                            {activity.description}
+                          </div>
                         </div>
                       )}
                     </div>

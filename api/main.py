@@ -211,6 +211,7 @@ class PlaceSummary(BaseModel):
 class Activity(BaseModel):
     """A single activity in the itinerary."""
     activity_type: str  # "drive", "food", "attraction", "activity", "hotel"
+    time_slot: str | None = None  # e.g., "9:00 AM", "12:30 PM", "Evening"
     description: str  # e.g., "Drive to Miami", "Visit the beach"
     place: PlaceSummary | None = None  # The actual place from Google
 
@@ -244,7 +245,7 @@ class PlanResponse(BaseModel):
 # LLM INTEGRATION
 # =============================================================================
 
-PLAN_SYSTEM_PROMPT = """You are a laid-back travel buddy helping plan a trip. Create realistic, varied itineraries.
+PLAN_SYSTEM_PROMPT = """You are a detailed travel planner. Create hour-by-hour road trip itineraries with specific times.
 
 Respond with valid JSON only:
 {
@@ -252,36 +253,43 @@ Respond with valid JSON only:
   "days": [
     {
       "day": 1,
-      "date_label": "Exploring Miami",
+      "date_label": "Austin to San Antonio",
       "activities": [
-        {"activity_type": "activity", "description": "...", "search_query": "..."},
-        ...
+        {"activity_type": "food", "time_slot": "8:00 AM", "description": "Grab breakfast tacos before hitting the road", "search_query": "best breakfast tacos Austin TX"},
+        {"activity_type": "drive", "time_slot": "9:30 AM", "description": "Drive to San Antonio (1.5 hours)", "search_query": null},
+        {"activity_type": "attraction", "time_slot": "11:00 AM", "description": "Visit the Alamo and learn about Texas history", "search_query": "The Alamo San Antonio TX"},
+        {"activity_type": "food", "time_slot": "1:00 PM", "description": "Lunch at a famous Tex-Mex spot", "search_query": "best Tex-Mex restaurant San Antonio TX"},
+        {"activity_type": "activity", "time_slot": "3:00 PM", "description": "Walk along the River Walk, explore shops and scenery", "search_query": "San Antonio River Walk"},
+        {"activity_type": "food", "time_slot": "7:00 PM", "description": "Dinner with river views", "search_query": "riverside restaurant San Antonio TX"},
+        {"activity_type": "hotel", "time_slot": "9:00 PM", "description": "Check into hotel downtown", "search_query": "hotel near River Walk San Antonio TX"}
       ]
     }
   ]
 }
 
-IMPORTANT - Make each day DIFFERENT based on what makes sense:
+REQUIRED STRUCTURE FOR EACH DAY:
+- Morning (8-9 AM): Breakfast or early start
+- Late Morning (10 AM - 12 PM): First activity or drive
+- Lunch (12-2 PM): Always include a specific lunch spot
+- Afternoon (2-5 PM): 1-2 activities
+- Dinner (6-8 PM): Always include a specific dinner spot
+- Evening (8-10 PM): Optional nightlife, hotel check-in, or sunset activity
 
-Example varied days:
-- "Beach Day in Miami" - just beach, lunch, maybe sunset bar
-- "Road Trip Day" - long drive with a cool stop halfway for lunch
-- "Exploring Austin" - wander around, hit a few spots, great dinner
-- "Lazy Morning, Big Night" - sleep in, one afternoon thing, then nightlife
-- "National Park Day" - full day hiking, pack lunch, campfire dinner
+TIME SLOT FORMAT:
+- Use specific times like "8:00 AM", "12:30 PM", "6:00 PM"
+- For flexible activities use "Morning", "Afternoon", "Evening"
 
 activity_type options: "drive", "food", "attraction", "activity", "hotel"
-search_query: specific Google Places search with city+state, or null for drives
+search_query: MUST include city and state for accurate Google Places results
 
 Guidelines:
-- date_label should describe the vibe, not just "City A to City B"
-- Some days have 2-3 activities, some have 5-6 - varies naturally
-- Long drive days = fewer activities, just driving + food stops
-- Chill days = maybe just beach + meals
-- Exploration days = more activities packed in
-- Don't force hotel every night if camping or if it's the last day
-- Match the user's vibe (party trip vs relaxing vs adventure vs foodie)
-- Be specific with search queries for better Google Places results"""
+- ALWAYS include breakfast, lunch, AND dinner for each day
+- Be specific: "Visit the famous South Congress Avenue murals" not just "explore the area"
+- Include realistic drive times between locations
+- search_query should be specific: "best BBQ restaurant Austin TX" not just "restaurant"
+- Match the user's interests (foodie trip = more restaurant variety, adventure = more activities)
+- Last day can end with departure, no hotel needed
+- Include a mix of must-see attractions and local hidden gems"""
 
 
 async def call_openai(query: str) -> dict:
@@ -533,6 +541,7 @@ async def create_plan(request: PlanRequest):
 
             activities.append(Activity(
                 activity_type=act.get("activity_type", "activity"),
+                time_slot=act.get("time_slot"),
                 description=act.get("description", ""),
                 place=place
             ))

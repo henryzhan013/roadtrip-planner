@@ -448,6 +448,17 @@ h1, h2, h3, h4, h5, h6 {
   min-width: 0;
 }
 
+.activity-time {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 4px;
+  display: inline-block;
+  background: var(--primary-bg);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
 .activity-name {
   font-weight: 600;
   color: var(--gray-800);
