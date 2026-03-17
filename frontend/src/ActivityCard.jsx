@@ -93,9 +93,6 @@ function ActivityCard({
       <div className="activity-content">
         {hasPlace ? (
           <>
-            {activity.time_slot && (
-              <div className="activity-time">{activity.time_slot}</div>
-            )}
             <div className="activity-name">{activity.place.name}</div>
             <div className="activity-desc">{activity.description}</div>
             <div className="activity-meta">
@@ -143,16 +140,11 @@ function ActivityCard({
             </div>
           </>
         ) : (
-          <div>
-            {activity.time_slot && (
-              <div className="activity-time">{activity.time_slot}</div>
-            )}
-            <div style={{
-              color: "var(--gray-600)",
-              fontStyle: activity.activity_type === "drive" ? "italic" : "normal"
-            }}>
-              {activity.description}
-            </div>
+          <div style={{
+            color: "var(--gray-600)",
+            fontStyle: activity.activity_type === "drive" ? "italic" : "normal"
+          }}>
+            {activity.description}
           </div>
         )}
       </div>
