@@ -1,36 +1,31 @@
 import { useState, useEffect } from 'react'
 import Placecard from './PlaceCard'
+import ActivityCard from './ActivityCard'
 import 'leaflet/dist/leaflet.css'
 import Map from './Map'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragOverlay
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy
+} from '@dnd-kit/sortable'
 
-// Icons for different activity types
+// Icons for different activity types (used in export)
 const activityIcons = {
   drive: '🚗',
   food: '🍽️',
   attraction: '🏛️',
   activity: '🎯',
   hotel: '🏨'
-}
-
-// Price level display
-const priceLevels = {
-  1: '$',
-  2: '$$',
-  3: '$$$',
-  4: '$$$$'
-}
-
-// Generate booking/map links for a place
-const getPlaceLinks = (place) => {
-  const encodedName = encodeURIComponent(place.name)
-  const encodedAddress = encodeURIComponent(place.address || '')
-
-  return {
-    googleMaps: `https://www.google.com/maps/search/?api=1&query=${encodedName}+${encodedAddress}&query_place_id=${place.place_id}`,
-    googleDirections: `https://www.google.com/maps/dir/?api=1&destination=${encodedName}+${encodedAddress}&destination_place_id=${place.place_id}`,
-    yelp: `https://www.yelp.com/search?find_desc=${encodedName}&find_loc=${encodedAddress}`,
-    bookGoogle: `https://www.google.com/search?q=${encodedName}+${encodedAddress}+reservations+booking`
-  }
 }
 
 // API URL from environment
@@ -446,28 +441,42 @@ function App(){
     setResults(allPlaces)
   }
 
-  const moveActivity = (dayIndex, activityIndex, direction) => {
-    const newDays = [...tripDays]
-    const activities = [...newDays[dayIndex].activities]
-    const newIndex = activityIndex + direction
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
 
-    if (newIndex < 0 || newIndex >= activities.length) return
+  // Handle drag end for reordering activities
+  const handleDragEnd = (event, dayIndex) => {
+    const { active, over } = event
 
-    // Swap
-    const temp = activities[activityIndex]
-    activities[activityIndex] = activities[newIndex]
-    activities[newIndex] = temp
+    if (active.id !== over?.id) {
+      const newDays = [...tripDays]
+      const activities = newDays[dayIndex].activities
+      const oldIndex = activities.findIndex((_, i) => `${dayIndex}-${i}` === active.id)
+      const newIndex = activities.findIndex((_, i) => `${dayIndex}-${i}` === over.id)
 
-    newDays[dayIndex] = { ...newDays[dayIndex], activities }
-    setTripDays(newDays)
+      newDays[dayIndex] = {
+        ...newDays[dayIndex],
+        activities: arrayMove(activities, oldIndex, newIndex)
+      }
+      setTripDays(newDays)
 
-    // Update results for map
-    const allPlaces = newDays.flatMap(day =>
-      day.activities
-        .filter(act => act.place)
-        .map(act => ({ place: act.place, day: day.day, activity_type: act.activity_type }))
-    )
-    setResults(allPlaces)
+      // Update results for map
+      const allPlaces = newDays.flatMap(day =>
+        day.activities
+          .filter(act => act.place)
+          .map(act => ({ place: act.place, day: day.day, activity_type: act.activity_type }))
+      )
+      setResults(allPlaces)
+    }
   }
 
   const exportTrip = () => {
@@ -910,132 +919,30 @@ function App(){
                 </button>
               </div>
 
-              <div>
-                {day.activities.map((activity, idx) => (
-                  <div
-                    key={`${day.day}-${idx}`}
-                    className={`activity-card ${activity.place ? 'with-place' : ''}`}
-                    onClick={() => activity.place && setSelectedPlace({ place: activity.place })}
-                  >
-                    <div className="activity-icon">
-                      {activityIcons[activity.activity_type] || '📍'}
-                    </div>
-
-                    {/* Photo */}
-                    {activity.place?.photo_url && (
-                      <img
-                        src={activity.place.photo_url}
-                        alt={activity.place.name}
-                        className="activity-photo"
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={(event) => handleDragEnd(event, dayIndex)}
+              >
+                <SortableContext
+                  items={day.activities.map((_, idx) => `${dayIndex}-${idx}`)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div>
+                    {day.activities.map((activity, idx) => (
+                      <ActivityCard
+                        key={`${dayIndex}-${idx}`}
+                        activityId={`${dayIndex}-${idx}`}
+                        activity={activity}
+                        isFavorite={activity.place ? favorites.includes(activity.place.place_id) : false}
+                        onToggleFavorite={toggleFavorite}
+                        onRemove={() => removeActivity(dayIndex, idx)}
+                        onSelect={setSelectedPlace}
                       />
-                    )}
-
-                    <div className="activity-content">
-                      {activity.place ? (
-                        <>
-                          {activity.time_slot && (
-                            <div className="activity-time">{activity.time_slot}</div>
-                          )}
-                          <div className="activity-name">
-                            {activity.place.name}
-                          </div>
-                          <div className="activity-desc">
-                            {activity.description}
-                          </div>
-                          <div className="activity-meta">
-                            <span>📍 {activity.place.address}</span>
-                            {activity.place.rating && (
-                              <span>⭐ {activity.place.rating}</span>
-                            )}
-                            {activity.place.price_level && (
-                              <span style={{ color: "var(--secondary)" }}>
-                                {priceLevels[activity.place.price_level]}
-                              </span>
-                            )}
-                          </div>
-                          {/* Booking & Map Links */}
-                          <div className="link-pills">
-                            <a
-                              href={getPlaceLinks(activity.place).googleMaps}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="link-pill link-pill-blue"
-                            >
-                              📍 Map
-                            </a>
-                            <a
-                              href={getPlaceLinks(activity.place).googleDirections}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="link-pill link-pill-blue"
-                            >
-                              🚗 Directions
-                            </a>
-                            {(activity.activity_type === "food" || activity.activity_type === "hotel") && (
-                              <a
-                                href={getPlaceLinks(activity.place).bookGoogle}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="link-pill link-pill-green"
-                              >
-                                📅 Book
-                              </a>
-                            )}
-                          </div>
-                        </>
-                      ) : (
-                        <div>
-                          {activity.time_slot && (
-                            <div className="activity-time">{activity.time_slot}</div>
-                          )}
-                          <div style={{
-                            color: "var(--gray-600)",
-                            fontStyle: activity.activity_type === "drive" ? "italic" : "normal"
-                          }}>
-                            {activity.description}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Reorder buttons */}
-                    <div className="reorder-buttons">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); moveActivity(dayIndex, idx, -1) }}
-                        disabled={idx === 0}
-                        className="reorder-btn"
-                      >▲</button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); moveActivity(dayIndex, idx, 1) }}
-                        disabled={idx === day.activities.length - 1}
-                        className="reorder-btn"
-                      >▼</button>
-                    </div>
-
-                    {activity.place && (
-                      <button
-                        className={`favorite-btn ${favorites.includes(activity.place.place_id) ? 'favorited' : ''}`}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          toggleFavorite(activity.place.place_id, activity.place)
-                        }}
-                      >
-                        {favorites.includes(activity.place.place_id) ? "❤️" : "🤍"}
-                      </button>
-                    )}
-
-                    {/* Delete button */}
-                    <button
-                      onClick={(e) => { e.stopPropagation(); removeActivity(dayIndex, idx) }}
-                      className="delete-btn"
-                      title="Remove"
-                    >🗑️</button>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </SortableContext>
+              </DndContext>
             </div>
           ))
         ) : (
