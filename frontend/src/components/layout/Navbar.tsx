@@ -29,6 +29,9 @@ export function Navbar() {
         <Link to="/" className={`navbar-link ${isActive('/') ? 'active' : ''}`}>
           Home
         </Link>
+        <Link to="/explore" className={`navbar-link ${isActive('/explore') ? 'active' : ''}`}>
+          Explore
+        </Link>
         <Link to="/plan" className={`navbar-link ${isActive('/plan') ? 'active' : ''}`}>
           Plan Trip
         </Link>
@@ -38,13 +41,16 @@ export function Navbar() {
             {trips.length > 0 && <span className="navbar-badge">{trips.length}</span>}
           </Link>
         )}
+        <Link to="/about" className={`navbar-link ${isActive('/about') ? 'active' : ''}`}>
+          About
+        </Link>
       </div>
 
       <div className="navbar-actions">
         {isAuthenticated && user && (
-          <span className="navbar-user">
+          <Link to="/profile" className="navbar-user">
             👤 {user.username}
-          </span>
+          </Link>
         )}
 
         {isAuthenticated ? (

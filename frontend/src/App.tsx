@@ -8,6 +8,10 @@ import { PlanPage } from './pages/PlanPage';
 import { TripsPage } from './pages/TripsPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { AboutPage } from './pages/AboutPage';
+import { ProfilePage } from './pages/ProfilePage';
+import { ExplorePage } from './pages/ExplorePage';
+import { TripDetailsPage } from './pages/TripDetailsPage';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import 'leaflet/dist/leaflet.css';
 
@@ -21,11 +25,29 @@ function App() {
               <Route element={<Layout />}>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/plan" element={<PlanPage />} />
+                <Route path="/explore" element={<ExplorePage />} />
+                <Route path="/about" element={<AboutPage />} />
                 <Route
                   path="/trips"
                   element={
                     <ProtectedRoute>
                       <TripsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/trips/:tripId"
+                  element={
+                    <ProtectedRoute>
+                      <TripDetailsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <ProfilePage />
                     </ProtectedRoute>
                   }
                 />
