@@ -14,6 +14,84 @@ import type { Place, DayPlan, Activity } from '../types';
 
 const generateTripId = () => Math.random().toString(36).substring(2, 10);
 
+const TRAVEL_TIPS = [
+  { icon: '🎒', tip: 'Pack a portable charger - you\'ll need it for navigation!' },
+  { icon: '📸', tip: 'Golden hour is 1 hour after sunrise and before sunset for best photos' },
+  { icon: '⛽', tip: 'Fill up when you hit half tank on rural roads' },
+  { icon: '🍽️', tip: 'Ask locals for restaurant recommendations - they know the hidden gems' },
+  { icon: '🗺️', tip: 'Download offline maps before you lose signal' },
+  { icon: '☕', tip: 'Local coffee shops often have better wifi than chains' },
+  { icon: '🚗', tip: 'Take breaks every 2 hours to stay alert on long drives' },
+  { icon: '📱', tip: 'Screenshot important reservations in case you lose connection' },
+  { icon: '🌅', tip: 'Arrive at popular spots early to beat the crowds' },
+  { icon: '💡', tip: 'Hotel parking can be expensive - check prices beforehand' },
+];
+
+const LOADING_STAGES = [
+  { text: 'Understanding your trip preferences', icon: '🧠' },
+  { text: 'Finding the best routes', icon: '🛣️' },
+  { text: 'Discovering amazing restaurants', icon: '🍽️' },
+  { text: 'Locating must-see attractions', icon: '🏛️' },
+  { text: 'Searching for perfect hotels', icon: '🏨' },
+  { text: 'Optimizing your itinerary', icon: '✨' },
+];
+
+function TripLoader() {
+  const [tipIndex, setTipIndex] = useState(0);
+  const [stageIndex, setStageIndex] = useState(0);
+
+  useEffect(() => {
+    const tipInterval = setInterval(() => {
+      setTipIndex(prev => (prev + 1) % TRAVEL_TIPS.length);
+    }, 4000);
+
+    const stageInterval = setInterval(() => {
+      setStageIndex(prev => Math.min(prev + 1, LOADING_STAGES.length - 1));
+    }, 2500);
+
+    return () => {
+      clearInterval(tipInterval);
+      clearInterval(stageInterval);
+    };
+  }, []);
+
+  const currentTip = TRAVEL_TIPS[tipIndex];
+  const currentStage = LOADING_STAGES[stageIndex];
+
+  return (
+    <div className="trip-loader">
+      <div className="loader-animation">
+        <div className="loader-car">🚗</div>
+        <div className="loader-road">
+          <div className="road-line"></div>
+          <div className="road-line"></div>
+          <div className="road-line"></div>
+        </div>
+      </div>
+
+      <div className="loader-stage">
+        <span className="stage-icon">{currentStage.icon}</span>
+        <span className="stage-text">{currentStage.text}</span>
+        <span className="loading-dots"></span>
+      </div>
+
+      <div className="loader-progress">
+        {LOADING_STAGES.map((_, idx) => (
+          <div
+            key={idx}
+            className={`progress-dot ${idx <= stageIndex ? 'active' : ''}`}
+          />
+        ))}
+      </div>
+
+      <div className="loader-tip">
+        <span className="tip-icon">{currentTip.icon}</span>
+        <span className="tip-text">{currentTip.tip}</span>
+      </div>
+    </div>
+  );
+}
+
 
 function Confetti({ active }: { active: boolean }) {
   if (!active) return null;
@@ -271,12 +349,7 @@ export function PlanPage() {
       )}
 
       {/* Loading */}
-      {state.loading && (
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <div className="loading-text">Planning your trip<span className="loading-dots"></span></div>
-        </div>
-      )}
+      {state.loading && <TripLoader />}
 
       {/* Error */}
       {state.error && (
