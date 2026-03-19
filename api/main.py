@@ -38,6 +38,7 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 GOOGLE_PLACES_API_KEY = os.getenv("GOOGLE_PLACES_API_KEY")
 DATABASE_URL = os.getenv("DATABASE_URL")
+WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")  # WeatherAPI.com key
 
 # Rate limits
 OPENAI_RATE_LIMIT_PER_MINUTE = int(os.getenv("OPENAI_RATE_LIMIT_PER_MINUTE", "60"))
@@ -814,3 +815,216 @@ def delete_trip(sync_code: str, trip_id: str):
         return {"message": "Trip deleted"}
     finally:
         session.close()
+
+
+# =============================================================================
+# TRIP UPDATE ENDPOINT (PATCH)
+# =============================================================================
+
+class TripUpdateRequest(BaseModel):
+    """Request model for updating a trip."""
+    query: str | None = None
+    summary: str | None = None
+    days: list | None = None
+
+
+@app.patch("/trips/{sync_code}/{trip_id}")
+def update_trip(sync_code: str, trip_id: str, updates: TripUpdateRequest):
+    """Update an existing saved trip (partial update)."""
+    if not SessionLocal:
+        raise HTTPException(status_code=503, detail="Database not configured")
+
+    session = SessionLocal()
+    try:
+        trip = session.query(SavedTrip).filter(
+            SavedTrip.sync_code == sync_code.upper(),
+            SavedTrip.trip_id == trip_id
+        ).first()
+
+        if not trip:
+            raise HTTPException(status_code=404, detail="Trip not found")
+
+        # Apply partial updates
+        if updates.query is not None:
+            trip.query = updates.query
+        if updates.summary is not None:
+            trip.summary = updates.summary
+        if updates.days is not None:
+            trip.trip_data = json.dumps(updates.days)
+
+        session.commit()
+
+        return {
+            "message": "Trip updated",
+            "id": trip.trip_id,
+            "updated_at": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+    finally:
+        session.close()
+
+
+# =============================================================================
+# BUDGET CALCULATION ENDPOINT
+# =============================================================================
+
+# Cost estimates per price level (in USD)
+COST_ESTIMATES = {
+    "food": {1: 15, 2: 30, 3: 60, 4: 120},
+    "hotel": {1: 80, 2: 150, 3: 300, 4: 500},
+    "attraction": {1: 10, 2: 25, 3: 50, 4: 100},
+    "activity": {1: 20, 2: 50, 3: 100, 4: 200},
+    "drive": {1: 0, 2: 0, 3: 0, 4: 0},
+}
+
+
+class BudgetRequest(BaseModel):
+    """Request model for budget calculation."""
+    days: list  # List of DayPlan objects
+
+
+class BudgetResponse(BaseModel):
+    """Response model for budget calculation."""
+    total_estimated: float
+    by_day: list[float]
+    by_category: dict[str, float]
+
+
+@app.post("/calculate-budget", response_model=BudgetResponse)
+def calculate_budget(request: BudgetRequest):
+    """Calculate estimated costs for a trip based on place price levels."""
+    by_day = []
+    by_category = {"food": 0.0, "hotel": 0.0, "attraction": 0.0, "activity": 0.0}
+
+    for day in request.days:
+        day_total = 0.0
+        activities = day.get("activities", []) if isinstance(day, dict) else getattr(day, "activities", [])
+
+        for activity in activities:
+            if isinstance(activity, dict):
+                activity_type = activity.get("activity_type", "activity")
+                place = activity.get("place")
+                price_level = place.get("price_level", 2) if place else 2
+            else:
+                activity_type = getattr(activity, "activity_type", "activity")
+                place = getattr(activity, "place", None)
+                price_level = getattr(place, "price_level", 2) if place else 2
+
+            # Get cost estimate
+            if activity_type in COST_ESTIMATES:
+                cost = COST_ESTIMATES[activity_type].get(price_level or 2, 0)
+                day_total += cost
+                if activity_type in by_category:
+                    by_category[activity_type] += cost
+
+        by_day.append(day_total)
+
+    return BudgetResponse(
+        total_estimated=sum(by_day),
+        by_day=by_day,
+        by_category=by_category
+    )
+
+
+# =============================================================================
+# WEATHER ENDPOINT
+# =============================================================================
+
+class WeatherLocation(BaseModel):
+    """A location and date for weather forecast."""
+    lat: float
+    lng: float
+    date: str  # YYYY-MM-DD format
+
+
+class WeatherForecast(BaseModel):
+    """Weather forecast for a specific day and location."""
+    date: str
+    location: str
+    temperature_high: float
+    temperature_low: float
+    condition: str
+    precipitation_chance: int
+    icon: str
+
+
+class WeatherRequest(BaseModel):
+    """Request model for weather forecasts."""
+    locations: list[WeatherLocation]
+
+
+class WeatherResponse(BaseModel):
+    """Response model for weather forecasts."""
+    forecasts: list[WeatherForecast]
+
+
+# Weather rate limiter
+weather_limiter = RateLimiter(30, 500, "Weather")
+
+
+@app.post("/weather", response_model=WeatherResponse)
+async def get_weather(request: WeatherRequest):
+    """
+    Get weather forecasts for trip locations and dates.
+    Uses WeatherAPI.com for up to 14-day forecasts.
+    """
+    if not WEATHER_API_KEY:
+        raise HTTPException(status_code=503, detail="Weather API not configured")
+
+    allowed, reason = weather_limiter.check()
+    if not allowed:
+        raise HTTPException(status_code=429, detail=reason)
+
+    forecasts = []
+
+    for loc in request.locations:
+        try:
+            # WeatherAPI.com forecast endpoint
+            url = f"https://api.weatherapi.com/v1/forecast.json?key={WEATHER_API_KEY}&q={loc.lat},{loc.lng}&dt={loc.date}&aqi=no"
+
+            response = await http_client.get(url)
+            weather_limiter.record()
+
+            if response.status_code == 200:
+                data = response.json()
+                location_name = data.get("location", {}).get("name", "Unknown")
+                forecast_day = data.get("forecast", {}).get("forecastday", [{}])[0]
+                day_data = forecast_day.get("day", {})
+
+                forecasts.append(WeatherForecast(
+                    date=loc.date,
+                    location=location_name,
+                    temperature_high=day_data.get("maxtemp_f", 75),
+                    temperature_low=day_data.get("mintemp_f", 55),
+                    condition=day_data.get("condition", {}).get("text", "Unknown"),
+                    precipitation_chance=day_data.get("daily_chance_of_rain", 0),
+                    icon=day_data.get("condition", {}).get("icon", ""),
+                ))
+            else:
+                # Return a placeholder if API fails for this location
+                forecasts.append(WeatherForecast(
+                    date=loc.date,
+                    location="Unknown",
+                    temperature_high=75,
+                    temperature_low=55,
+                    condition="Unknown",
+                    precipitation_chance=0,
+                    icon="",
+                ))
+
+        except Exception as e:
+            print(f"Weather API error for {loc.lat},{loc.lng}: {e}")
+            # Return placeholder on error
+            forecasts.append(WeatherForecast(
+                date=loc.date,
+                location="Unknown",
+                temperature_high=75,
+                temperature_low=55,
+                condition="Unknown",
+                precipitation_chance=0,
+                icon="",
+            ))
+
+    return WeatherResponse(forecasts=forecasts)

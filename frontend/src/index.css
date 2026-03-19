@@ -1409,3 +1409,312 @@ h1, h2, h3, h4, h5, h6 {
 .confetti:nth-child(6n+4) { background: #ef4444; }
 .confetti:nth-child(6n+5) { background: #8b5cf6; }
 .confetti:nth-child(6n+6) { background: #ec4899; }
+
+/* ========================================
+   Weather Badge
+   ======================================== */
+.weather-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--primary-bg);
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  color: var(--gray-700);
+}
+
+.weather-badge-compact {
+  padding: 4px 8px;
+  gap: 4px;
+}
+
+.weather-icon {
+  font-size: 16px;
+}
+
+.weather-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.weather-temp {
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.weather-condition {
+  font-size: 11px;
+  color: var(--gray-500);
+}
+
+.weather-precip {
+  font-size: 11px;
+  color: var(--info);
+}
+
+/* ========================================
+   Budget Tracker
+   ======================================== */
+.budget-tracker {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+
+.budget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.budget-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.budget-progress {
+  margin-bottom: 16px;
+}
+
+.budget-bar {
+  height: 8px;
+  background: var(--gray-200);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.budget-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--secondary) 0%, var(--secondary-light) 100%);
+  border-radius: var(--radius-full);
+  transition: width var(--transition);
+}
+
+.budget-fill.over-budget {
+  background: linear-gradient(90deg, var(--error) 0%, #f87171 100%);
+}
+
+.budget-numbers {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--gray-600);
+}
+
+.over-budget-text {
+  color: var(--error);
+  font-weight: 600;
+}
+
+.budget-empty {
+  text-align: center;
+  padding: 20px;
+  color: var(--gray-500);
+}
+
+.budget-empty p {
+  margin-bottom: 12px;
+}
+
+.budget-estimate {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid var(--gray-200);
+  margin-top: 12px;
+}
+
+.estimate-label {
+  font-size: 13px;
+  color: var(--gray-500);
+}
+
+.estimate-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gray-800);
+}
+
+/* ========================================
+   Cost Breakdown
+   ======================================== */
+.cost-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cost-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cost-item-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cost-icon {
+  font-size: 14px;
+}
+
+.cost-label {
+  flex: 1;
+  font-size: 13px;
+  color: var(--gray-600);
+}
+
+.cost-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.cost-bar {
+  height: 4px;
+  background: var(--gray-200);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.cost-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width var(--transition);
+}
+
+.cost-bar-fill[data-category="food"] {
+  background: #f59e0b;
+}
+
+.cost-bar-fill[data-category="hotel"] {
+  background: #6366f1;
+}
+
+.cost-bar-fill[data-category="attraction"] {
+  background: #10b981;
+}
+
+.cost-bar-fill[data-category="activity"] {
+  background: #8b5cf6;
+}
+
+/* ========================================
+   Edit Mode Toolbar
+   ======================================== */
+.edit-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  color: white;
+  border-radius: var(--radius);
+  margin: 0 20px 16px;
+  box-shadow: var(--shadow);
+}
+
+.edit-indicator {
+  flex: 1;
+  font-weight: 600;
+}
+
+.edit-toolbar .btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+}
+
+.edit-toolbar .btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.edit-toolbar .btn-primary {
+  background: white;
+  color: var(--accent-dark);
+}
+
+.edit-toolbar .btn-primary:hover {
+  background: var(--gray-100);
+}
+
+/* ========================================
+   Enhanced Day Card
+   ======================================== */
+.day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.day-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.day-number {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.day-label {
+  font-size: 14px;
+  color: var(--gray-600);
+}
+
+.day-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.day-cost {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--secondary);
+  background: rgba(16, 185, 129, 0.1);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+}
+
+.day-activities {
+  margin-top: 12px;
+}
+
+/* ========================================
+   Saved Trip Actions
+   ======================================== */
+.saved-trip-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.saved-trip-info {
+  flex: 1;
+  cursor: pointer;
+}
+
+.saved-trip-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.btn-icon {
+  padding: 6px 8px;
+  font-size: 14px;
+}

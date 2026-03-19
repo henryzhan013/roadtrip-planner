@@ -1,67 +1,55 @@
-import { useSortable } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import type { Activity, Place } from '../../types';
+import { ACTIVITY_ICONS, PRICE_LABELS } from '../../utils/constants';
 
-// Icons for different activity types
-const activityIcons = {
-  drive: '🚗',
-  food: '🍽️',
-  attraction: '🏛️',
-  activity: '🎯',
-  hotel: '🏨'
+interface ActivityCardProps {
+  activity: Activity;
+  activityId: string;
+  isFavorite: boolean;
+  onToggleFavorite: (placeId: string, place: Place) => void;
+  onRemove: () => void;
+  onSelect: (data: { place: Place }) => void;
 }
 
-// Price level display
-const priceLevels = {
-  1: '$',
-  2: '$$',
-  3: '$$$',
-  4: '$$$$'
-}
-
-// Generate booking/map links for a place
-const getPlaceLinks = (place) => {
-  const encodedName = encodeURIComponent(place.name)
-  const encodedAddress = encodeURIComponent(place.address || '')
+function getPlaceLinks(place: Place) {
+  const encodedName = encodeURIComponent(place.name);
+  const encodedAddress = encodeURIComponent(place.address || '');
 
   return {
     googleMaps: `https://www.google.com/maps/search/?api=1&query=${encodedName}+${encodedAddress}&query_place_id=${place.place_id}`,
     googleDirections: `https://www.google.com/maps/dir/?api=1&destination=${encodedName}+${encodedAddress}&destination_place_id=${place.place_id}`,
-    bookGoogle: `https://www.google.com/search?q=${encodedName}+${encodedAddress}+reservations+booking`
-  }
+    bookGoogle: `https://www.google.com/search?q=${encodedName}+${encodedAddress}+reservations+booking`,
+  };
 }
 
-function ActivityCard({
+export function ActivityCard({
   activity,
   activityId,
   isFavorite,
   onToggleFavorite,
   onRemove,
-  onSelect
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging
-  } = useSortable({ id: activityId })
+  onSelect,
+}: ActivityCardProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: activityId,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 1000 : 'auto'
-  }
+    zIndex: isDragging ? 1000 : 'auto' as const,
+  };
 
-  const hasPlace = !!activity.place
+  const hasPlace = !!activity.place;
 
   return (
     <div
       ref={setNodeRef}
       style={style}
       className={`activity-card ${hasPlace ? 'with-place' : ''} ${isDragging ? 'dragging' : ''}`}
-      onClick={() => hasPlace && onSelect({ place: activity.place })}
+      onClick={() => hasPlace && activity.place && onSelect({ place: activity.place })}
     >
       {/* Drag Handle */}
       <div className="drag-handle" {...attributes} {...listeners}>
@@ -76,33 +64,25 @@ function ActivityCard({
       </div>
 
       {/* Activity Icon */}
-      <div className="activity-icon">
-        {activityIcons[activity.activity_type] || '📍'}
-      </div>
+      <div className="activity-icon">{ACTIVITY_ICONS[activity.activity_type] || '📍'}</div>
 
       {/* Photo */}
       {activity.place?.photo_url && (
-        <img
-          src={activity.place.photo_url}
-          alt={activity.place.name}
-          className="activity-photo"
-        />
+        <img src={activity.place.photo_url} alt={activity.place.name} className="activity-photo" />
       )}
 
       {/* Content */}
       <div className="activity-content">
-        {hasPlace ? (
+        {hasPlace && activity.place ? (
           <>
             <div className="activity-name">{activity.place.name}</div>
             <div className="activity-desc">{activity.description}</div>
             <div className="activity-meta">
               <span>📍 {activity.place.address}</span>
-              {activity.place.rating && (
-                <span>⭐ {activity.place.rating}</span>
-              )}
+              {activity.place.rating && <span>⭐ {activity.place.rating}</span>}
               {activity.place.price_level && (
-                <span style={{ color: "var(--secondary)" }}>
-                  {priceLevels[activity.place.price_level]}
+                <span style={{ color: 'var(--secondary)' }}>
+                  {PRICE_LABELS[activity.place.price_level]}
                 </span>
               )}
             </div>
@@ -126,7 +106,7 @@ function ActivityCard({
               >
                 🚗 Directions
               </a>
-              {(activity.activity_type === "food" || activity.activity_type === "hotel") && (
+              {(activity.activity_type === 'food' || activity.activity_type === 'hotel') && (
                 <a
                   href={getPlaceLinks(activity.place).bookGoogle}
                   target="_blank"
@@ -140,10 +120,12 @@ function ActivityCard({
             </div>
           </>
         ) : (
-          <div style={{
-            color: "var(--gray-600)",
-            fontStyle: activity.activity_type === "drive" ? "italic" : "normal"
-          }}>
+          <div
+            style={{
+              color: 'var(--gray-600)',
+              fontStyle: activity.activity_type === 'drive' ? 'italic' : 'normal',
+            }}
+          >
             {activity.description}
           </div>
         )}
@@ -151,22 +133,22 @@ function ActivityCard({
 
       {/* Actions - shown on hover */}
       <div className="activity-actions">
-        {hasPlace && (
+        {hasPlace && activity.place && (
           <button
             className={`action-btn favorite-btn ${isFavorite ? 'favorited' : ''}`}
             onClick={(e) => {
-              e.stopPropagation()
-              onToggleFavorite(activity.place.place_id, activity.place)
+              e.stopPropagation();
+              onToggleFavorite(activity.place!.place_id, activity.place!);
             }}
-            title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+            title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
           >
-            {isFavorite ? "❤️" : "🤍"}
+            {isFavorite ? '❤️' : '🤍'}
           </button>
         )}
         <button
           onClick={(e) => {
-            e.stopPropagation()
-            onRemove()
+            e.stopPropagation();
+            onRemove();
           }}
           className="action-btn delete-btn"
           title="Remove stop"
@@ -175,7 +157,5 @@ function ActivityCard({
         </button>
       </div>
     </div>
-  )
+  );
 }
-
-export default ActivityCard
