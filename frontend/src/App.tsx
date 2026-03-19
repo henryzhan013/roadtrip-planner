@@ -4,6 +4,7 @@ import { AppProvider, useAppContext } from './context/AppContext';
 import { useTrips } from './hooks/useTrips';
 import { useFavorites } from './hooks/useFavorites';
 import { useBudget } from './hooks/useBudget';
+import { useWeather } from './hooks/useWeather';
 import { api } from './utils/api';
 import { DayCard } from './components/trip/DayCard';
 import { PlaceCard } from './components/trip/PlaceCard';
@@ -92,6 +93,7 @@ function AppContent() {
   const { trips, loadTrips, saveTrip, deleteTrip, updateTrip } = useTrips();
   const { loadFavorites, toggleFavorite, isFavorite } = useFavorites();
   const { budget, calculateBudget, setBudgetLimit, getCostForDay } = useBudget();
+  const { fetchWeatherForTrip } = useWeather();
 
   const [results, setResults] = useState<Array<{ place: Place; day?: number; activity_type?: string }>>([]);
   const [showSyncModal, setShowSyncModal] = useState(false);
@@ -121,6 +123,26 @@ function AppContent() {
       calculateBudget(state.tripDays);
     }
   }, [state.tripDays, calculateBudget]);
+
+  // Fetch weather when trip is loaded
+  useEffect(() => {
+    const loadWeather = async () => {
+      if (state.tripDays.length > 0) {
+        const startDate = new Date();
+        const forecasts = await fetchWeatherForTrip(state.tripDays, startDate);
+
+        // Update each day with its weather
+        if (forecasts.length > 0) {
+          const updatedDays = state.tripDays.map((day, index) => ({
+            ...day,
+            weather: forecasts[index] || undefined,
+          }));
+          dispatch({ type: 'SET_TRIP_DAYS', payload: updatedDays });
+        }
+      }
+    };
+    loadWeather();
+  }, [state.tripSummary]); // Only run when a new trip is loaded (summary changes)
 
   // Load trip from URL on mount
   useEffect(() => {
