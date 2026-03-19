@@ -118,3 +118,34 @@ export interface Toast {
   message: string;
   type: 'success' | 'error' | 'info';
 }
+
+// Auth types
+export interface User {
+  id: number;
+  email: string;
+  username: string;
+  sync_code: string;
+}
+
+export interface AuthState {
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface RegisterCredentials {
+  email: string;
+  username: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: User;
+}

@@ -1,47 +1,30 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 import { useTrips } from '../hooks/useTrips';
 import { useTripContext } from '../context/TripContext';
-import { api } from '../utils/api';
 import type { Trip } from '../types';
 
 export function TripsPage() {
   const navigate = useNavigate();
-  const { syncCode, setSyncCode, showToast } = useAppContext();
+  const { showToast, setSyncCode } = useAppContext();
+  const { user } = useAuth();
   const { trips, loadTrips, deleteTrip } = useTrips();
   const { dispatch } = useTripContext();
 
-  const [showSyncModal, setShowSyncModal] = useState(false);
-  const [syncInput, setSyncInput] = useState('');
-  const [syncLoading, setSyncLoading] = useState(false);
+  // Set the sync code from authenticated user
+  useEffect(() => {
+    if (user?.sync_code) {
+      setSyncCode(user.sync_code);
+    }
+  }, [user, setSyncCode]);
 
   useEffect(() => {
-    if (syncCode) {
+    if (user?.sync_code) {
       loadTrips();
     }
-  }, [syncCode, loadTrips]);
-
-  const createSyncCode = async () => {
-    setSyncLoading(true);
-    try {
-      const data = await api.post<{ sync_code: string }>('/sync/create', {});
-      setSyncCode(data.sync_code);
-      setShowSyncModal(false);
-    } catch (err) {
-      console.log('Failed to create sync code:', err);
-    }
-    setSyncLoading(false);
-  };
-
-  const useSyncCodeFromInput = () => {
-    if (syncInput.trim()) {
-      const code = syncInput.trim().toUpperCase();
-      setSyncCode(code);
-      setShowSyncModal(false);
-      setSyncInput('');
-    }
-  };
+  }, [user, loadTrips]);
 
   const handleViewTrip = (trip: Trip) => {
     dispatch({ type: 'SET_QUERY', payload: trip.query });
@@ -60,74 +43,6 @@ export function TripsPage() {
     await deleteTrip(tripId);
     showToast('Trip deleted');
   };
-
-  if (!syncCode) {
-    return (
-      <div className="trips-page">
-        <div className="trips-empty-state">
-          <div className="empty-state-icon">🔄</div>
-          <h2>Enable Sync to Save Trips</h2>
-          <p>Create a sync code to save and access your trips across devices</p>
-          <button onClick={() => setShowSyncModal(true)} className="btn btn-primary btn-lg">
-            Get Started
-          </button>
-        </div>
-
-        {/* Sync Modal */}
-        {showSyncModal && (
-          <div className="modal-overlay">
-            <div className="modal">
-              <div className="modal-header">
-                <h3>🔄 Sync Your Trips</h3>
-                <button onClick={() => setShowSyncModal(false)} className="modal-close">×</button>
-              </div>
-
-              <p style={{ color: 'var(--gray-600)', marginBottom: '20px' }}>
-                Sync your trips across devices. Create a new code or enter an existing one.
-              </p>
-
-              <button
-                onClick={createSyncCode}
-                disabled={syncLoading}
-                className="btn btn-secondary"
-                style={{ width: '100%', marginBottom: '20px' }}
-              >
-                {syncLoading ? 'Creating...' : 'Create New Sync Code'}
-              </button>
-
-              <div style={{ textAlign: 'center', color: 'var(--gray-400)', marginBottom: '16px' }}>
-                — or enter existing code —
-              </div>
-
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <input
-                  value={syncInput}
-                  onChange={e => setSyncInput(e.target.value.toUpperCase())}
-                  placeholder="ABC123"
-                  maxLength={6}
-                  className="input"
-                  style={{
-                    flex: 1,
-                    textAlign: 'center',
-                    letterSpacing: '6px',
-                    fontSize: '18px',
-                    fontWeight: '600',
-                  }}
-                />
-                <button
-                  onClick={useSyncCodeFromInput}
-                  disabled={syncInput.length < 6}
-                  className="btn btn-primary"
-                >
-                  Use
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
 
   return (
     <div className="trips-page">

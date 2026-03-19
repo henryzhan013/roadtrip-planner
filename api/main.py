@@ -20,13 +20,15 @@ from contextlib import asynccontextmanager
 
 import openai
 import httpx
+import bcrypt
+import jwt
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from sqlalchemy import create_engine, Column, String, Float, Integer, DateTime
+from pydantic import BaseModel, EmailStr
+from sqlalchemy import create_engine, Column, String, Float, Integer, DateTime, Boolean
 from sqlalchemy.orm import sessionmaker, declarative_base
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Load environment variables
 load_dotenv()
@@ -39,6 +41,9 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 GOOGLE_PLACES_API_KEY = os.getenv("GOOGLE_PLACES_API_KEY")
 DATABASE_URL = os.getenv("DATABASE_URL")
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")  # WeatherAPI.com key
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRATION_HOURS = 24 * 7  # 7 days
 
 # Rate limits
 OPENAI_RATE_LIMIT_PER_MINUTE = int(os.getenv("OPENAI_RATE_LIMIT_PER_MINUTE", "60"))
@@ -84,6 +89,19 @@ class SavedTrip(Base):
     summary = Column(String(500))
     trip_data = Column(String(50000))  # JSON string of full trip
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class User(Base):
+    """Database model for user accounts."""
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    username = Column(String(100), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=False)
+    sync_code = Column(String(10), unique=True, nullable=False)  # Auto-generated sync code
+    created_at = Column(DateTime, default=datetime.utcnow)
+    is_active = Column(Boolean, default=True)
 
 
 # Database engine and session (initialized in lifespan if DATABASE_URL is set)
@@ -1028,3 +1046,197 @@ async def get_weather(request: WeatherRequest):
             ))
 
     return WeatherResponse(forecasts=forecasts)
+
+
+# =============================================================================
+# AUTHENTICATION
+# =============================================================================
+
+def hash_password(password: str) -> str:
+    """Hash a password using bcrypt."""
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+
+def verify_password(password: str, hashed: str) -> bool:
+    """Verify a password against its hash."""
+    return bcrypt.checkpw(password.encode(), hashed.encode())
+
+
+def create_jwt_token(user_id: int, email: str, sync_code: str) -> str:
+    """Create a JWT token for a user."""
+    payload = {
+        "user_id": user_id,
+        "email": email,
+        "sync_code": sync_code,
+        "exp": datetime.utcnow() + timedelta(hours=JWT_EXPIRATION_HOURS)
+    }
+    return jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+
+
+def decode_jwt_token(token: str) -> dict | None:
+    """Decode and validate a JWT token."""
+    try:
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
+
+
+async def get_current_user(authorization: str = Header(None)) -> dict:
+    """Dependency to get the current authenticated user from JWT."""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    # Extract token from "Bearer <token>"
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        raise HTTPException(status_code=401, detail="Invalid authorization header")
+
+    token = parts[1]
+    payload = decode_jwt_token(token)
+
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    return payload
+
+
+class RegisterRequest(BaseModel):
+    """Request model for user registration."""
+    email: str
+    username: str
+    password: str
+
+
+class LoginRequest(BaseModel):
+    """Request model for user login."""
+    email: str
+    password: str
+
+
+class AuthResponse(BaseModel):
+    """Response model for auth endpoints."""
+    token: str
+    user: dict
+
+
+@app.post("/auth/register", response_model=AuthResponse)
+def register(request: RegisterRequest):
+    """Register a new user account."""
+    if not SessionLocal:
+        raise HTTPException(status_code=503, detail="Database not configured")
+
+    # Validate password strength
+    if len(request.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+
+    if len(request.username) < 3:
+        raise HTTPException(status_code=400, detail="Username must be at least 3 characters")
+
+    session = SessionLocal()
+    try:
+        # Check if email already exists
+        existing_email = session.query(User).filter(User.email == request.email.lower()).first()
+        if existing_email:
+            raise HTTPException(status_code=400, detail="Email already registered")
+
+        # Check if username already exists
+        existing_username = session.query(User).filter(User.username == request.username.lower()).first()
+        if existing_username:
+            raise HTTPException(status_code=400, detail="Username already taken")
+
+        # Generate unique sync code
+        sync_code = generate_sync_code()
+        while session.query(User).filter(User.sync_code == sync_code).first():
+            sync_code = generate_sync_code()
+
+        # Create user
+        user = User(
+            email=request.email.lower(),
+            username=request.username.lower(),
+            password_hash=hash_password(request.password),
+            sync_code=sync_code
+        )
+        session.add(user)
+        session.commit()
+
+        # Generate JWT token
+        token = create_jwt_token(user.id, user.email, user.sync_code)
+
+        return AuthResponse(
+            token=token,
+            user={
+                "id": user.id,
+                "email": user.email,
+                "username": user.username,
+                "sync_code": user.sync_code
+            }
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(status_code=500, detail=f"Registration failed: {str(e)}")
+    finally:
+        session.close()
+
+
+@app.post("/auth/login", response_model=AuthResponse)
+def login(request: LoginRequest):
+    """Log in to an existing account."""
+    if not SessionLocal:
+        raise HTTPException(status_code=503, detail="Database not configured")
+
+    session = SessionLocal()
+    try:
+        # Find user by email
+        user = session.query(User).filter(User.email == request.email.lower()).first()
+
+        if not user:
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+
+        if not user.is_active:
+            raise HTTPException(status_code=401, detail="Account is disabled")
+
+        # Verify password
+        if not verify_password(request.password, user.password_hash):
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+
+        # Generate JWT token
+        token = create_jwt_token(user.id, user.email, user.sync_code)
+
+        return AuthResponse(
+            token=token,
+            user={
+                "id": user.id,
+                "email": user.email,
+                "username": user.username,
+                "sync_code": user.sync_code
+            }
+        )
+    finally:
+        session.close()
+
+
+@app.get("/auth/me")
+def get_current_user_info(current_user: dict = Depends(get_current_user)):
+    """Get the current authenticated user's info."""
+    if not SessionLocal:
+        raise HTTPException(status_code=503, detail="Database not configured")
+
+    session = SessionLocal()
+    try:
+        user = session.query(User).filter(User.id == current_user["user_id"]).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        return {
+            "id": user.id,
+            "email": user.email,
+            "username": user.username,
+            "sync_code": user.sync_code
+        }
+    finally:
+        session.close()

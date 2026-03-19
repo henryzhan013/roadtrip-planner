@@ -2177,3 +2177,134 @@ h1, h2, h3, h4, h5, h6 {
     height: 300px;
   }
 }
+
+/* ========================================
+   Authentication Pages
+   ======================================== */
+.auth-page {
+  min-height: calc(100vh - 120px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.auth-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  padding: 40px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: var(--shadow-lg);
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.auth-header h1 {
+  font-size: 28px;
+  color: var(--gray-800);
+  margin-bottom: 8px;
+}
+
+.auth-header p {
+  color: var(--gray-500);
+  font-size: 15px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-700);
+}
+
+.auth-error {
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  border: 1px solid #fecaca;
+}
+
+.auth-submit {
+  margin-top: 8px;
+}
+
+.auth-footer {
+  text-align: center;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--gray-200);
+}
+
+.auth-footer p {
+  color: var(--gray-500);
+  font-size: 14px;
+}
+
+.auth-link {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.auth-link:hover {
+  text-decoration: underline;
+}
+
+.auth-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  gap: 16px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--gray-200);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.navbar-user {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-600);
+  padding: 6px 12px;
+  background: var(--gray-100);
+  border-radius: var(--radius);
+}
+
+/* Dark mode auth styles */
+[data-theme="dark"] .auth-card {
+  background: var(--bg-card);
+}
+
+[data-theme="dark"] .auth-error {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+[data-theme="dark"] .navbar-user {
+  background: var(--gray-200);
+  color: var(--gray-700);
+}

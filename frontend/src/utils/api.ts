@@ -9,9 +9,18 @@ class ApiError extends Error {
   }
 }
 
+interface RequestOptions extends RequestInit {
+  headers?: Record<string, string>;
+}
+
+function getAuthHeader(): Record<string, string> {
+  const token = localStorage.getItem('auth_token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 async function request<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestOptions = {}
 ): Promise<T> {
   const url = `${API_URL}${endpoint}`;
 
@@ -19,6 +28,7 @@ async function request<T>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...getAuthHeader(),
       ...options.headers,
     },
   });
@@ -32,22 +42,25 @@ async function request<T>(
 }
 
 export const api = {
-  get: <T>(endpoint: string) => request<T>(endpoint),
+  get: <T>(endpoint: string, options?: RequestOptions) =>
+    request<T>(endpoint, options),
 
-  post: <T>(endpoint: string, data: unknown) =>
+  post: <T>(endpoint: string, data: unknown, options?: RequestOptions) =>
     request<T>(endpoint, {
       method: 'POST',
       body: JSON.stringify(data),
+      ...options,
     }),
 
-  patch: <T>(endpoint: string, data: unknown) =>
+  patch: <T>(endpoint: string, data: unknown, options?: RequestOptions) =>
     request<T>(endpoint, {
       method: 'PATCH',
       body: JSON.stringify(data),
+      ...options,
     }),
 
-  delete: <T>(endpoint: string) =>
-    request<T>(endpoint, { method: 'DELETE' }),
+  delete: <T>(endpoint: string, options?: RequestOptions) =>
+    request<T>(endpoint, { method: 'DELETE', ...options }),
 };
 
 export { ApiError };
