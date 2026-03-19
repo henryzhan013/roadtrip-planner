@@ -1,13 +1,12 @@
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
-import { useEffect, useState } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { useEffect } from 'react';
 import L from 'leaflet';
-import type { DayPlan, Place, RouteInfo, MapView } from '../../types';
+import type { DayPlan, Place, MapView } from '../../types';
 
 interface MapProps {
   results: Array<{ place: Place; day?: number; activity_type?: string }>;
   tripDays: DayPlan[];
   onSelectPlace: (data: { place: Place }) => void;
-  onRouteInfo: (info: RouteInfo | null) => void;
   mapView?: MapView;
 }
 
@@ -55,45 +54,6 @@ function createNumberedIcon(number: number, color = '#6366f1'): L.DivIcon {
 // Day colors - matching the design system
 const dayColors = ['#6366f1', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899'];
 
-// Decode polyline from OSRM
-function decodePolyline(encoded: string): [number, number][] {
-  const poly: [number, number][] = [];
-  let index = 0;
-  let lat = 0;
-  let lng = 0;
-
-  while (index < encoded.length) {
-    let b: number;
-    let shift = 0;
-    let result = 0;
-
-    do {
-      b = encoded.charCodeAt(index++) - 63;
-      result |= (b & 0x1f) << shift;
-      shift += 5;
-    } while (b >= 0x20);
-
-    const dlat = result & 1 ? ~(result >> 1) : result >> 1;
-    lat += dlat;
-
-    shift = 0;
-    result = 0;
-
-    do {
-      b = encoded.charCodeAt(index++) - 63;
-      result |= (b & 0x1f) << shift;
-      shift += 5;
-    } while (b >= 0x20);
-
-    const dlng = result & 1 ? ~(result >> 1) : result >> 1;
-    lng += dlng;
-
-    poly.push([lat / 1e5, lng / 1e5]);
-  }
-
-  return poly;
-}
-
 // Fit map to show all markers
 function FitBounds({ positions }: { positions: Position[] }) {
   const map = useMap();
@@ -108,92 +68,13 @@ function FitBounds({ positions }: { positions: Position[] }) {
   return null;
 }
 
-export function Map({ results, tripDays, onSelectPlace, onRouteInfo, mapView = 'daily' }: MapProps) {
-  const [routeGeometry, setRouteGeometry] = useState<[number, number][]>([]);
-  const [routeLoading, setRouteLoading] = useState(false);
+export function Map({ results, tripDays, onSelectPlace }: MapProps) {
   const defaultCenter: [number, number] = [30.27, -97.74]; // Austin, TX
 
   // Get all positions for bounds fitting
   const allPositions = results
     .filter((r) => r.place)
     .map((r) => ({ lat: r.place.lat, lng: r.place.lng }));
-
-  // Build waypoints based on map view mode
-  const waypoints: Position[] = [];
-  if (tripDays && tripDays.length > 0) {
-    if (mapView === 'fullTrip') {
-      // Full trip: ALL stops in sequence
-      tripDays.forEach((day) => {
-        day.activities
-          .filter((act) => act.place && act.place.lat && act.place.lng)
-          .forEach((act) => {
-            if (act.place) {
-              waypoints.push({ lat: act.place.lat, lng: act.place.lng });
-            }
-          });
-      });
-    } else {
-      // Daily view: centroid per day
-      tripDays.forEach((day) => {
-        const placesWithLocation = day.activities.filter(
-          (act) => act.place && act.place.lat && act.place.lng
-        );
-
-        if (placesWithLocation.length > 0) {
-          const avgLat =
-            placesWithLocation.reduce((sum, act) => sum + (act.place?.lat || 0), 0) /
-            placesWithLocation.length;
-          const avgLng =
-            placesWithLocation.reduce((sum, act) => sum + (act.place?.lng || 0), 0) /
-            placesWithLocation.length;
-          waypoints.push({ lat: avgLat, lng: avgLng });
-        }
-      });
-    }
-  }
-
-  // Fetch real driving route from OSRM
-  useEffect(() => {
-    if (waypoints.length < 2) {
-      setRouteGeometry([]);
-      onRouteInfo?.(null);
-      return;
-    }
-
-    const fetchRoute = async () => {
-      setRouteLoading(true);
-      try {
-        const coords = waypoints.map((w) => `${w.lng},${w.lat}`).join(';');
-        const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=polyline`;
-
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (data.code === 'Ok' && data.routes && data.routes[0]) {
-          const route = data.routes[0];
-          const decoded = decodePolyline(route.geometry);
-          setRouteGeometry(decoded);
-
-          // Send route info back to parent
-          onRouteInfo?.({
-            distance: route.distance,
-            duration: route.duration,
-            polyline: route.geometry,
-          });
-        } else {
-          setRouteGeometry(waypoints.map((w) => [w.lat, w.lng]));
-          onRouteInfo?.(null);
-        }
-      } catch (err) {
-        console.log('Route fetch error:', err);
-        setRouteGeometry(waypoints.map((w) => [w.lat, w.lng]));
-        onRouteInfo?.(null);
-      }
-      setRouteLoading(false);
-    };
-
-    fetchRoute();
-  }, [JSON.stringify(waypoints), mapView]);
 
   let globalIndex = 0;
 
@@ -205,25 +86,6 @@ export function Map({ results, tripDays, onSelectPlace, onRouteInfo, mapView = '
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
       />
-
-      {routeGeometry.length > 1 && (
-        <Polyline
-          positions={routeGeometry}
-          color={mapView === 'fullTrip' ? '#6366f1' : '#10b981'}
-          weight={mapView === 'fullTrip' ? 5 : 4}
-          opacity={0.85}
-        />
-      )}
-
-      {routeLoading && waypoints.length > 1 && (
-        <Polyline
-          positions={waypoints.map((w) => [w.lat, w.lng] as [number, number])}
-          color="#ccc"
-          weight={3}
-          opacity={0.5}
-          dashArray="5, 10"
-        />
-      )}
 
       {tripDays && tripDays.length > 0
         ? tripDays.map((day, dayIndex) => {

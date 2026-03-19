@@ -361,12 +361,8 @@ export function PlanPage() {
         <div className="trip-summary">
           <div className="trip-summary-title">📍 {state.tripSummary}</div>
           <div className="trip-summary-stats">
-            {state.routeInfo && (
-              <>
-                <span>🚗 {Math.round(state.routeInfo.distance / 1609.34)} miles</span>
-                <span>⏱️ {Math.floor(state.routeInfo.duration / 3600)}h {Math.round((state.routeInfo.duration % 3600) / 60)}m</span>
-              </>
-            )}
+            <span>📅 {state.tripDays.length} days</span>
+            <span>📍 {state.tripDays.reduce((sum, d) => sum + d.activities.filter(a => a.place).length, 0)} stops</span>
             {budget && budget.spent > 0 && <span>💰 ~${budget.spent.toLocaleString()}</span>}
           </div>
         </div>
@@ -419,28 +415,10 @@ export function PlanPage() {
           </div>
 
           <div className="map-panel">
-            {state.tripDays.length > 1 && (
-              <div className="map-toggle">
-                <button
-                  onClick={() => dispatch({ type: 'SET_MAP_VIEW', payload: 'daily' })}
-                  className={`btn btn-sm ${state.mapView === 'daily' ? 'btn-primary' : 'btn-ghost'}`}
-                >
-                  Day-by-Day
-                </button>
-                <button
-                  onClick={() => dispatch({ type: 'SET_MAP_VIEW', payload: 'fullTrip' })}
-                  className={`btn btn-sm ${state.mapView === 'fullTrip' ? 'btn-primary' : 'btn-ghost'}`}
-                >
-                  Full Route
-                </button>
-              </div>
-            )}
             <Map
               results={results}
               tripDays={state.tripDays}
               onSelectPlace={data => dispatch({ type: 'SET_SELECTED_PLACE', payload: data })}
-              onRouteInfo={info => dispatch({ type: 'SET_ROUTE_INFO', payload: info })}
-              mapView={state.mapView}
             />
           </div>
         </div>
