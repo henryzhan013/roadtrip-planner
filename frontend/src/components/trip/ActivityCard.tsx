@@ -63,8 +63,13 @@ export function ActivityCard({
         </svg>
       </div>
 
-      {/* Activity Icon */}
-      <div className="activity-icon">{ACTIVITY_ICONS[activity.activity_type] || '📍'}</div>
+      {/* Time Slot Label */}
+      {activity.time_slot && (
+        <div className="activity-time-slot">
+          <span className="time-icon">{ACTIVITY_ICONS[activity.activity_type] || '📍'}</span>
+          <span className="time-label">{activity.time_slot}</span>
+        </div>
+      )}
 
       {/* Photo */}
       {activity.place?.photo_url && (
@@ -120,12 +125,7 @@ export function ActivityCard({
             </div>
           </>
         ) : (
-          <div
-            style={{
-              color: 'var(--gray-600)',
-              fontStyle: activity.activity_type === 'drive' ? 'italic' : 'normal',
-            }}
-          >
+          <div className="activity-simple">
             {activity.description}
           </div>
         )}

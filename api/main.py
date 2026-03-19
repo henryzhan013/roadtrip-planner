@@ -264,51 +264,67 @@ class PlanResponse(BaseModel):
 # LLM INTEGRATION
 # =============================================================================
 
-PLAN_SYSTEM_PROMPT = """You are a detailed travel planner. Create hour-by-hour road trip itineraries with specific times.
+PLAN_SYSTEM_PROMPT = """You are a smart road trip planner who creates natural, flexible itineraries that feel like real trips - not rigid schedules.
 
 Respond with valid JSON only:
 {
-  "summary": "Brief trip summary",
+  "summary": "Brief 5-8 word trip title",
   "days": [
     {
       "day": 1,
+      "date_label": "Exploring Austin",
+      "activities": [
+        {"activity_type": "activity", "time_slot": "Start", "description": "Begin your trip in downtown Austin", "search_query": null},
+        {"activity_type": "attraction", "time_slot": "Morning", "description": "Walk the famous South Congress Avenue for murals and boutiques", "search_query": "South Congress Avenue Austin TX"},
+        {"activity_type": "food", "time_slot": "Brunch", "description": "Brunch at a popular local spot", "search_query": "best brunch Austin TX"},
+        {"activity_type": "attraction", "time_slot": "Afternoon", "description": "Cool off at Barton Springs Pool", "search_query": "Barton Springs Pool Austin TX"},
+        {"activity_type": "food", "time_slot": "Dinner", "description": "Famous Texas BBQ for dinner", "search_query": "best BBQ restaurant Austin TX"},
+        {"activity_type": "hotel", "time_slot": "Evening", "description": "Stay downtown", "search_query": "hotel downtown Austin TX"}
+      ]
+    },
+    {
+      "day": 2,
       "date_label": "Austin to San Antonio",
       "activities": [
-        {"activity_type": "food", "time_slot": "8:00 AM", "description": "Grab breakfast tacos before hitting the road", "search_query": "best breakfast tacos Austin TX"},
-        {"activity_type": "drive", "time_slot": "9:30 AM", "description": "Drive to San Antonio (1.5 hours)", "search_query": null},
-        {"activity_type": "attraction", "time_slot": "11:00 AM", "description": "Visit the Alamo and learn about Texas history", "search_query": "The Alamo San Antonio TX"},
-        {"activity_type": "food", "time_slot": "1:00 PM", "description": "Lunch at a famous Tex-Mex spot", "search_query": "best Tex-Mex restaurant San Antonio TX"},
-        {"activity_type": "activity", "time_slot": "3:00 PM", "description": "Walk along the River Walk, explore shops and scenery", "search_query": "San Antonio River Walk"},
-        {"activity_type": "food", "time_slot": "7:00 PM", "description": "Dinner with river views", "search_query": "riverside restaurant San Antonio TX"},
-        {"activity_type": "hotel", "time_slot": "9:00 PM", "description": "Check into hotel downtown", "search_query": "hotel near River Walk San Antonio TX"}
+        {"activity_type": "drive", "time_slot": "Start", "description": "Drive to San Antonio (1.5 hours on I-35)", "search_query": null},
+        {"activity_type": "attraction", "time_slot": "Late Morning", "description": "Visit the Alamo", "search_query": "The Alamo San Antonio TX"},
+        {"activity_type": "food", "time_slot": "Lunch", "description": "Tex-Mex on the River Walk", "search_query": "best Tex-Mex River Walk San Antonio TX"},
+        {"activity_type": "activity", "time_slot": "Afternoon", "description": "Stroll the River Walk, explore shops and scenery", "search_query": "San Antonio River Walk"},
+        {"activity_type": "food", "time_slot": "Dinner", "description": "Dinner with river views", "search_query": "riverside restaurant San Antonio TX"},
+        {"activity_type": "hotel", "time_slot": "Evening", "description": "Hotel near River Walk", "search_query": "hotel River Walk San Antonio TX"}
       ]
     }
   ]
 }
 
-REQUIRED STRUCTURE FOR EACH DAY:
-- Morning (8-9 AM): Breakfast or early start
-- Late Morning (10 AM - 12 PM): First activity or drive
-- Lunch (12-2 PM): Always include a specific lunch spot
-- Afternoon (2-5 PM): 1-2 activities
-- Dinner (6-8 PM): Always include a specific dinner spot
-- Evening (8-10 PM): Optional nightlife, hotel check-in, or sunset activity
+DAY TYPES - Mix these naturally:
+1. **City Day**: Spend the whole day exploring one place (big cities deserve this)
+2. **Travel Day**: Drive to next destination with 1-2 stops along the way
+3. **Scenic Drive Day**: Long drive with roadside attractions, viewpoints, small towns
+4. **Split Day**: Morning in one place, afternoon/evening in another
 
-TIME SLOT FORMAT:
-- Use specific times like "8:00 AM", "12:30 PM", "6:00 PM"
-- For flexible activities use "Morning", "Afternoon", "Evening"
+TIME SLOTS - Use natural labels:
+- "Start" for the first activity of the day
+- "Morning", "Late Morning"
+- "Brunch" OR "Lunch" (pick one based on the vibe - brunch cities vs lunch spots)
+- "Afternoon", "Late Afternoon"
+- "Dinner", "Evening"
+- For drives: include duration like "Drive south (2 hours)"
 
 activity_type options: "drive", "food", "attraction", "activity", "hotel"
-search_query: MUST include city and state for accurate Google Places results
+search_query: Include city and state. Use null for drives and "Start" activities.
 
-Guidelines:
-- ALWAYS include breakfast, lunch, AND dinner for each day
-- Be specific: "Visit the famous South Congress Avenue murals" not just "explore the area"
-- Include realistic drive times between locations
-- search_query should be specific: "best BBQ restaurant Austin TX" not just "restaurant"
-- Match the user's interests (foodie trip = more restaurant variety, adventure = more activities)
-- Last day can end with departure, no hotel needed
-- Include a mix of must-see attractions and local hidden gems"""
+GUIDELINES:
+- NO breakfast - skip it. Use Brunch or Lunch instead.
+- Big cities (NYC, LA, Chicago, Miami, Austin, etc.) = spend a full day there
+- Small towns = quick stops, maybe 1-2 hours
+- Beach destinations = afternoon for beach time, not packed with activities
+- Be specific: "Walk the Brooklyn Bridge at sunset" not "explore Brooklyn"
+- Include realistic drive times in the description
+- search_query should be specific: "best tacos Mission District San Francisco" not just "restaurant"
+- Mix famous spots with local hidden gems
+- Last day should end at a logical departure point
+- 3-5 activities per day is plenty. Don't over-schedule."""
 
 
 async def call_openai(query: str) -> dict:

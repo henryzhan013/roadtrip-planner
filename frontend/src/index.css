@@ -385,12 +385,13 @@ h1, h2, h3, h4, h5, h6 {
 .day-header {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
   color: white;
-  padding: 16px 20px;
+  padding: 14px 20px;
   font-weight: 600;
-  font-size: 16px;
+  font-size: 15px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
 }
 
 .day-header .btn {
@@ -520,6 +521,35 @@ h1, h2, h3, h4, h5, h6 {
 
 .action-btn.favorite-btn.favorited {
   animation: heartPop 0.4s ease;
+}
+
+/* Activity Time Slot - New cleaner layout */
+.activity-time-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 70px;
+  flex-shrink: 0;
+}
+
+.time-icon {
+  font-size: 20px;
+}
+
+.time-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.activity-simple {
+  color: var(--gray-600);
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .activity-icon {
@@ -1661,19 +1691,21 @@ h1, h2, h3, h4, h5, h6 {
 
 .day-title {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  align-items: center;
+  gap: 12px;
 }
 
 .day-number {
-  font-size: 18px;
+  font-size: 13px;
   font-weight: 700;
-  color: var(--primary);
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
 }
 
 .day-label {
-  font-size: 14px;
-  color: var(--gray-600);
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .day-meta {
