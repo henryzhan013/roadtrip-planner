@@ -15,10 +15,10 @@ export function HomePage() {
   };
 
   const exampleTrips = [
-    { query: '5 day Florida beaches and seafood', icon: '🏖️', image: 'https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f?w=400&q=80' },
-    { query: 'Weekend Austin TX live music and BBQ', icon: '🎸', image: 'https://images.unsplash.com/photo-1588993608265-8c5bdd5bd2c6?w=400&q=80' },
-    { query: '3 day California coast road trip', icon: '🌊', image: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=400&q=80' },
-    { query: 'NYC to Boston historic sites tour', icon: '🏛️', image: 'https://images.unsplash.com/photo-1582472470300-5765c6caf6c1?w=400&q=80' },
+    { query: '5 day Florida beaches and seafood', icon: '🏖️', gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
+    { query: 'Weekend Austin TX live music and BBQ', icon: '🎸', gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+    { query: '3 day California coast road trip', icon: '🌊', gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' },
+    { query: 'NYC to Boston historic sites tour', icon: '🏛️', gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
   ];
 
   return (
@@ -63,7 +63,7 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Example Trips with Images */}
+      {/* Example Trips */}
       <section className="examples-section">
         <h2>Try an example</h2>
         <div className="examples-grid">
@@ -77,12 +77,10 @@ export function HomePage() {
               }}
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <div className="example-card-image">
-                <img src={trip.image} alt={trip.query} loading="lazy" />
-                <div className="example-card-overlay"></div>
+              <div className="example-card-icon" style={{ background: trip.gradient }}>
+                <span className="example-emoji">{trip.icon}</span>
               </div>
               <div className="example-card-content">
-                <span className="example-icon">{trip.icon}</span>
                 <span className="example-text">{trip.query}</span>
               </div>
             </button>
