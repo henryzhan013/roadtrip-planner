@@ -15,10 +15,10 @@ export function HomePage() {
   };
 
   const exampleTrips = [
-    { query: '5 day Florida beaches and seafood', icon: '🏖️', image: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=400&q=80' },
-    { query: 'Weekend Austin TX live music and BBQ', icon: '🎸', image: 'https://images.unsplash.com/photo-1506157786151-b8491531f063?w=400&q=80' },
-    { query: '3 day California coast road trip', icon: '🌊', image: 'https://images.unsplash.com/photo-1449034446853-66c86144b0ad?w=400&q=80' },
-    { query: 'NYC to Boston historic sites tour', icon: '🏛️', image: 'https://images.unsplash.com/photo-1485738422979-f5c462d49f74?w=400&q=80' },
+    { query: '5 day Florida beaches and seafood', icon: '🏖️', image: 'https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f?w=400&q=80' },
+    { query: 'Weekend Austin TX live music and BBQ', icon: '🎸', image: 'https://images.unsplash.com/photo-1588993608265-8c5bdd5bd2c6?w=400&q=80' },
+    { query: '3 day California coast road trip', icon: '🌊', image: 'https://images.unsplash.com/photo-1506929562872-bb421503ef21?w=400&q=80' },
+    { query: 'NYC to Boston historic sites tour', icon: '🏛️', image: 'https://images.unsplash.com/photo-1582472470300-5765c6caf6c1?w=400&q=80' },
   ];
 
   return (
