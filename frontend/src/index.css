@@ -2874,7 +2874,7 @@ h1, h2, h3, h4, h5, h6 {
 .explore-hero {
   text-align: center;
   padding: 60px 20px;
-  background: linear-gradient(135deg, #8B4513 0%, #D2691E 50%, #F4A460 100%);
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 50%, #3b82b0 100%);
   border-radius: var(--radius-xl);
   margin-bottom: 32px;
   color: white;
@@ -2944,6 +2944,22 @@ h1, h2, h3, h4, h5, h6 {
 
 .category-name {
   font-size: 14px;
+}
+
+.explore-shuffle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 12px 20px;
+  background: var(--gray-50);
+  border-radius: var(--radius);
+}
+
+.shuffle-label {
+  font-size: 14px;
+  color: var(--gray-500);
 }
 
 .explore-grid {
@@ -3264,7 +3280,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 [data-theme="dark"] .explore-hero {
-  background: linear-gradient(135deg, #5D3A1A 0%, #8B5A2B 50%, #A0522D 100%);
+  background: linear-gradient(135deg, #1a2e4a 0%, #243d5c 50%, #2d4a6e 100%);
+}
+
+[data-theme="dark"] .explore-shuffle {
+  background: var(--gray-100);
 }
 
 [data-theme="dark"] .explore-search-input {
