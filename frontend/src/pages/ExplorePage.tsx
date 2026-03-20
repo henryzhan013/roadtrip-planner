@@ -13,7 +13,7 @@ interface Destination {
   suggestedQuery: string;
 }
 
-// 50 road trip ideas - weighted toward Texas and Southwest/West
+// 50 road trip ideas with real Unsplash images - weighted toward Texas and Southwest/West
 const allDestinations: Destination[] = [
   // TEXAS (18 trips)
   {
@@ -21,7 +21,7 @@ const allDestinations: Destination[] = [
     name: 'Austin',
     tagline: 'Live Music Capital of the World',
     description: 'Experience legendary 6th Street, world-class BBQ, and live music every night of the week.',
-    image: '🎸',
+    image: 'https://images.unsplash.com/photo-1531218150217-54595bc2b934?w=600&q=80',
     category: 'music',
     region: 'texas',
     suggestedQuery: '3 day Austin TX live music and BBQ trip',
@@ -31,7 +31,7 @@ const allDestinations: Destination[] = [
     name: 'Fort Worth Stockyards',
     tagline: 'Where the West Begins',
     description: 'Watch the daily cattle drive, explore historic saloons, and experience authentic cowboy culture.',
-    image: '🤠',
+    image: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=600&q=80',
     category: 'cowboy',
     region: 'texas',
     suggestedQuery: '2 day Fort Worth Stockyards cowboy experience',
@@ -41,7 +41,7 @@ const allDestinations: Destination[] = [
     name: 'Gruene Hall',
     tagline: "Texas' Oldest Dance Hall",
     description: 'Dance the night away at this 1878 landmark where legends like Willie Nelson have played.',
-    image: '🪕',
+    image: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&q=80',
     category: 'music',
     region: 'texas',
     suggestedQuery: 'Weekend trip to Gruene and New Braunfels TX',
@@ -51,7 +51,7 @@ const allDestinations: Destination[] = [
     name: 'Luckenbach',
     tagline: "Everybody's Somebody in Luckenbach",
     description: 'This tiny town made famous by Waylon Jennings is pure Texas Hill Country magic.',
-    image: '🎶',
+    image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&q=80',
     category: 'music',
     region: 'texas',
     suggestedQuery: 'Day trip to Luckenbach and Fredericksburg TX',
@@ -61,7 +61,7 @@ const allDestinations: Destination[] = [
     name: 'Bandera',
     tagline: 'Cowboy Capital of the World',
     description: 'Stay at a real dude ranch, go horseback riding, and two-step at the 11th Street Cowboy Bar.',
-    image: '🐎',
+    image: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=600&q=80',
     category: 'cowboy',
     region: 'texas',
     suggestedQuery: '3 day Bandera TX dude ranch experience',
@@ -71,7 +71,7 @@ const allDestinations: Destination[] = [
     name: 'Amarillo',
     tagline: 'Heart of Route 66',
     description: 'Try the 72oz steak challenge at Big Texan, visit Cadillac Ranch, and cruise Route 66.',
-    image: '🚗',
+    image: 'https://images.unsplash.com/photo-1545580492-8859ba8323f0?w=600&q=80',
     category: 'road-trip',
     region: 'texas',
     suggestedQuery: 'Route 66 road trip through Amarillo TX',
@@ -81,7 +81,7 @@ const allDestinations: Destination[] = [
     name: 'San Antonio',
     tagline: 'Remember the Alamo',
     description: 'Walk the famous River Walk, visit the Alamo, and enjoy Tex-Mex at its finest.',
-    image: '🏰',
+    image: 'https://images.unsplash.com/photo-1531261175012-50bf1003ae49?w=600&q=80',
     category: 'culture',
     region: 'texas',
     suggestedQuery: '3 day San Antonio history and food tour',
@@ -91,7 +91,7 @@ const allDestinations: Destination[] = [
     name: 'Marfa',
     tagline: 'Desert Art & Mystery Lights',
     description: 'Discover world-class art installations, watch for the mysterious Marfa lights, and explore Big Bend.',
-    image: '🌵',
+    image: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&q=80',
     category: 'adventure',
     region: 'texas',
     suggestedQuery: 'West Texas road trip Marfa and Big Bend',
@@ -101,7 +101,7 @@ const allDestinations: Destination[] = [
     name: 'Big Bend National Park',
     tagline: 'Where Texas Meets the Rio Grande',
     description: 'Hike through dramatic canyons, soak in hot springs, and stargaze under the darkest skies in North America.',
-    image: '🏜️',
+    image: 'https://images.unsplash.com/photo-1518098268026-4e89f1a2cd8e?w=600&q=80',
     category: 'national-park',
     region: 'texas',
     suggestedQuery: '4 day Big Bend National Park adventure',
@@ -111,7 +111,7 @@ const allDestinations: Destination[] = [
     name: 'Texas Hill Country',
     tagline: 'Wine, Wildflowers & Small Towns',
     description: 'Drive through rolling hills, visit charming towns like Fredericksburg, and sample Texas wines.',
-    image: '🍷',
+    image: 'https://images.unsplash.com/photo-1505765050516-f72dcac9c60e?w=600&q=80',
     category: 'road-trip',
     region: 'texas',
     suggestedQuery: '3 day Texas Hill Country wine and scenic drive',
@@ -121,7 +121,7 @@ const allDestinations: Destination[] = [
     name: 'Galveston Island',
     tagline: 'Historic Beach Getaway',
     description: 'Explore Victorian architecture, relax on Gulf beaches, and visit Moody Gardens.',
-    image: '🏖️',
+    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80',
     category: 'beach',
     region: 'texas',
     suggestedQuery: 'Weekend getaway to Galveston Island TX',
@@ -131,7 +131,7 @@ const allDestinations: Destination[] = [
     name: 'Houston Space Center',
     tagline: 'Where Space Exploration Lives',
     description: 'Tour NASA Johnson Space Center, see real spacecraft, and touch a moon rock.',
-    image: '🚀',
+    image: 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=600&q=80',
     category: 'culture',
     region: 'texas',
     suggestedQuery: '2 day Houston Space Center and museum tour',
@@ -141,7 +141,7 @@ const allDestinations: Destination[] = [
     name: 'Dallas Arts District',
     tagline: 'Urban Culture & Southern Charm',
     description: 'Explore world-class museums, the JFK memorial, and upscale dining in the Big D.',
-    image: '🎨',
+    image: 'https://images.unsplash.com/photo-1545194445-dddb8f4487c6?w=600&q=80',
     category: 'culture',
     region: 'texas',
     suggestedQuery: '3 day Dallas arts, history, and food trip',
@@ -151,7 +151,7 @@ const allDestinations: Destination[] = [
     name: 'Palo Duro Canyon',
     tagline: "The Grand Canyon of Texas",
     description: "Hike through America's second-largest canyon with stunning red rock formations and outdoor drama shows.",
-    image: '🏞️',
+    image: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=600&q=80',
     category: 'adventure',
     region: 'texas',
     suggestedQuery: '2 day Palo Duro Canyon camping and hiking trip',
@@ -161,7 +161,7 @@ const allDestinations: Destination[] = [
     name: 'South Padre Island',
     tagline: 'Tropical Texas Paradise',
     description: 'Kiteboard, watch sea turtles, and enjoy the most tropical beaches in Texas.',
-    image: '🐢',
+    image: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?w=600&q=80',
     category: 'beach',
     region: 'texas',
     suggestedQuery: '4 day South Padre Island beach vacation',
@@ -171,7 +171,7 @@ const allDestinations: Destination[] = [
     name: 'Enchanted Rock',
     tagline: 'Sacred Pink Granite Dome',
     description: 'Climb the massive pink granite dome, camp under the stars, and explore Hill Country.',
-    image: '🪨',
+    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=80',
     category: 'adventure',
     region: 'texas',
     suggestedQuery: 'Weekend Enchanted Rock camping and hiking',
@@ -181,7 +181,7 @@ const allDestinations: Destination[] = [
     name: 'Jefferson',
     tagline: 'Historic Riverboat Town',
     description: 'Step back in time in this antebellum town with ghost tours, B&Bs, and bayou boat rides.',
-    image: '🚢',
+    image: 'https://images.unsplash.com/photo-1499678329028-101435549a4e?w=600&q=80',
     category: 'culture',
     region: 'texas',
     suggestedQuery: 'Weekend trip to historic Jefferson TX',
@@ -191,7 +191,7 @@ const allDestinations: Destination[] = [
     name: 'Guadalupe Mountains',
     tagline: "Texas' Highest Peak",
     description: "Summit the highest point in Texas and explore ancient fossil reefs in this remote wilderness.",
-    image: '⛰️',
+    image: 'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?w=600&q=80',
     category: 'national-park',
     region: 'texas',
     suggestedQuery: '3 day Guadalupe Mountains National Park hiking trip',
@@ -203,7 +203,7 @@ const allDestinations: Destination[] = [
     name: 'Grand Canyon',
     tagline: 'One of the Seven Natural Wonders',
     description: 'Stand at the edge of a mile-deep canyon carved over millions of years by the Colorado River.',
-    image: '🏜️',
+    image: 'https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=600&q=80',
     category: 'national-park',
     region: 'southwest',
     suggestedQuery: '3 day Grand Canyon South Rim adventure',
@@ -213,7 +213,7 @@ const allDestinations: Destination[] = [
     name: 'Sedona',
     tagline: 'Red Rock Country',
     description: 'Experience stunning red rock formations, spiritual vortexes, and world-class hiking trails.',
-    image: '🔴',
+    image: 'https://images.unsplash.com/photo-1500531359996-c89a0e63e49c?w=600&q=80',
     category: 'adventure',
     region: 'southwest',
     suggestedQuery: '3 day Sedona red rocks and spiritual retreat',
@@ -223,7 +223,7 @@ const allDestinations: Destination[] = [
     name: 'Monument Valley',
     tagline: 'Iconic Western Landscape',
     description: 'Drive through the towering buttes and mesas that defined the American Western movie genre.',
-    image: '🏜️',
+    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80',
     category: 'road-trip',
     region: 'southwest',
     suggestedQuery: '2 day Monument Valley scenic drive and Navajo tour',
@@ -233,7 +233,7 @@ const allDestinations: Destination[] = [
     name: 'Las Vegas',
     tagline: 'Entertainment Capital of the World',
     description: 'Experience world-class shows, dining, and nightlife on the famous Strip.',
-    image: '🎰',
+    image: 'https://images.unsplash.com/photo-1605833556294-ea5c7a74f57d?w=600&q=80',
     category: 'culture',
     region: 'southwest',
     suggestedQuery: '3 day Las Vegas entertainment and food trip',
@@ -243,7 +243,7 @@ const allDestinations: Destination[] = [
     name: 'Zion National Park',
     tagline: 'Towering Red Cliffs & Slot Canyons',
     description: "Hike Angels Landing, wade through The Narrows, and marvel at Utah's first national park.",
-    image: '🥾',
+    image: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=600&q=80',
     category: 'national-park',
     region: 'southwest',
     suggestedQuery: '3 day Zion National Park hiking adventure',
@@ -253,7 +253,7 @@ const allDestinations: Destination[] = [
     name: 'Bryce Canyon',
     tagline: 'Forest of Stone Hoodoos',
     description: 'Walk among thousands of red, orange, and white hoodoos in this otherworldly landscape.',
-    image: '🧡',
+    image: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?w=600&q=80',
     category: 'national-park',
     region: 'southwest',
     suggestedQuery: '2 day Bryce Canyon hoodoo hiking trip',
@@ -263,7 +263,7 @@ const allDestinations: Destination[] = [
     name: 'Arches National Park',
     tagline: 'Over 2,000 Natural Stone Arches',
     description: 'See Delicate Arch at sunset and explore the highest concentration of natural arches on Earth.',
-    image: '🌉',
+    image: 'https://images.unsplash.com/photo-1575408264798-b50b252663e6?w=600&q=80',
     category: 'national-park',
     region: 'southwest',
     suggestedQuery: '2 day Arches and Canyonlands National Parks trip',
@@ -273,7 +273,7 @@ const allDestinations: Destination[] = [
     name: 'Rocky Mountain National Park',
     tagline: 'Alpine Wilderness & Trail Ridge Road',
     description: 'Drive the highest continuous paved road in America and spot elk, bighorn sheep, and wildflowers.',
-    image: '🦌',
+    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=80',
     category: 'national-park',
     region: 'southwest',
     suggestedQuery: '3 day Rocky Mountain National Park Colorado trip',
@@ -283,7 +283,7 @@ const allDestinations: Destination[] = [
     name: 'Denver',
     tagline: 'Mile High City',
     description: 'Explore craft breweries, Red Rocks Amphitheatre, and use it as a base for mountain adventures.',
-    image: '🍺',
+    image: 'https://images.unsplash.com/photo-1546156929-a4c0ac411f47?w=600&q=80',
     category: 'culture',
     region: 'southwest',
     suggestedQuery: '3 day Denver food, breweries, and Red Rocks trip',
@@ -293,7 +293,7 @@ const allDestinations: Destination[] = [
     name: 'Yellowstone',
     tagline: "America's First National Park",
     description: 'Watch Old Faithful erupt, see prismatic hot springs, and spot bison, wolves, and grizzlies.',
-    image: '🦬',
+    image: 'https://images.unsplash.com/photo-1503614472-8c93d56e92ce?w=600&q=80',
     category: 'national-park',
     region: 'southwest',
     suggestedQuery: '5 day Yellowstone National Park wildlife and geysers trip',
@@ -303,7 +303,7 @@ const allDestinations: Destination[] = [
     name: 'Glacier National Park',
     tagline: 'Crown of the Continent',
     description: 'Drive Going-to-the-Sun Road, hike to pristine alpine lakes, and see glaciers before they disappear.',
-    image: '🏔️',
+    image: 'https://images.unsplash.com/photo-1529439322271-42931c09bce1?w=600&q=80',
     category: 'national-park',
     region: 'southwest',
     suggestedQuery: '4 day Glacier National Park Montana adventure',
@@ -313,7 +313,7 @@ const allDestinations: Destination[] = [
     name: 'Santa Fe',
     tagline: 'Art, Adobe & Green Chile',
     description: "Explore America's oldest capital, world-class art galleries, and legendary New Mexican cuisine.",
-    image: '🌶️',
+    image: 'https://images.unsplash.com/photo-1518391846015-55a9cc003b25?w=600&q=80',
     category: 'culture',
     region: 'southwest',
     suggestedQuery: '3 day Santa Fe art and food tour',
@@ -323,7 +323,7 @@ const allDestinations: Destination[] = [
     name: 'Route 66',
     tagline: 'The Mother Road',
     description: 'Drive the iconic highway from Chicago to LA through small towns, diners, and vintage Americana.',
-    image: '🛣️',
+    image: 'https://images.unsplash.com/photo-1543158266-0066955047b1?w=600&q=80',
     category: 'road-trip',
     region: 'southwest',
     suggestedQuery: '7 day Route 66 road trip from Oklahoma City to Flagstaff',
@@ -333,7 +333,7 @@ const allDestinations: Destination[] = [
     name: 'Moab',
     tagline: 'Adventure Capital of Utah',
     description: 'Mountain bike slickrock, raft the Colorado River, and explore two national parks.',
-    image: '🚵',
+    image: 'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?w=600&q=80',
     category: 'adventure',
     region: 'southwest',
     suggestedQuery: '4 day Moab Utah adventure trip',
@@ -343,7 +343,7 @@ const allDestinations: Destination[] = [
     name: 'Oklahoma City',
     tagline: 'Cowboy Culture & Route 66',
     description: 'Visit the National Cowboy Museum, walk Bricktown, and cruise the Oklahoma Route 66 stretch.',
-    image: '🤠',
+    image: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=600&q=80',
     category: 'cowboy',
     region: 'southwest',
     suggestedQuery: '2 day Oklahoma City cowboy and Route 66 trip',
@@ -353,7 +353,7 @@ const allDestinations: Destination[] = [
     name: 'White Sands',
     tagline: 'Gypsum Dune Wonderland',
     description: 'Sled down pristine white sand dunes in this surreal New Mexico landscape.',
-    image: '🏝️',
+    image: 'https://images.unsplash.com/photo-1507400492013-162706c8c05e?w=600&q=80',
     category: 'national-park',
     region: 'southwest',
     suggestedQuery: '2 day White Sands and Carlsbad Caverns trip',
@@ -363,7 +363,7 @@ const allDestinations: Destination[] = [
     name: 'Jackson Hole',
     tagline: 'Gateway to Grand Teton',
     description: 'Experience the Wild West town square, world-class skiing, and stunning Teton views.',
-    image: '🎿',
+    image: 'https://images.unsplash.com/photo-1502786129293-79981df4e689?w=600&q=80',
     category: 'adventure',
     region: 'southwest',
     suggestedQuery: '4 day Jackson Hole and Grand Teton adventure',
@@ -375,7 +375,7 @@ const allDestinations: Destination[] = [
     name: 'Pacific Coast Highway',
     tagline: 'California Coastal Dream',
     description: 'Wind along dramatic cliffs from San Francisco to LA with stops at Big Sur and Hearst Castle.',
-    image: '🌊',
+    image: 'https://images.unsplash.com/photo-1519821172144-4f87d85de2a1?w=600&q=80',
     category: 'road-trip',
     region: 'other',
     suggestedQuery: '5 day Pacific Coast Highway road trip',
@@ -385,7 +385,7 @@ const allDestinations: Destination[] = [
     name: 'Nashville',
     tagline: 'Music City USA',
     description: 'Experience the Grand Ole Opry, hot chicken, and honky tonks on Broadway.',
-    image: '🎵',
+    image: 'https://images.unsplash.com/photo-1545419913-775e3e12197c?w=600&q=80',
     category: 'music',
     region: 'other',
     suggestedQuery: '3 day Nashville music and food trip',
@@ -395,7 +395,7 @@ const allDestinations: Destination[] = [
     name: 'New Orleans',
     tagline: 'The Big Easy',
     description: 'Jazz clubs, beignets, gumbo, and the most unique culture in America.',
-    image: '🎺',
+    image: 'https://images.unsplash.com/photo-1568402102990-bc541580b59f?w=600&q=80',
     category: 'music',
     region: 'other',
     suggestedQuery: '4 day New Orleans jazz, food, and culture trip',
@@ -405,7 +405,7 @@ const allDestinations: Destination[] = [
     name: 'Florida Keys',
     tagline: 'Overseas Highway Paradise',
     description: 'Drive across the ocean on US-1, snorkel coral reefs, and catch sunset at Mallory Square.',
-    image: '🌴',
+    image: 'https://images.unsplash.com/photo-1548574505-5e239809ee19?w=600&q=80',
     category: 'beach',
     region: 'other',
     suggestedQuery: '4 day Florida Keys road trip to Key West',
@@ -415,7 +415,7 @@ const allDestinations: Destination[] = [
     name: 'Blue Ridge Parkway',
     tagline: "America's Favorite Drive",
     description: 'Cruise through the Appalachian Mountains with stunning overlooks and charming mountain towns.',
-    image: '🍂',
+    image: 'https://images.unsplash.com/photo-1508193638397-1c4234db14d8?w=600&q=80',
     category: 'road-trip',
     region: 'other',
     suggestedQuery: '4 day Blue Ridge Parkway scenic drive',
@@ -425,7 +425,7 @@ const allDestinations: Destination[] = [
     name: 'Acadia National Park',
     tagline: 'Where Mountains Meet the Sea',
     description: 'Watch sunrise from Cadillac Mountain, explore tide pools, and enjoy fresh Maine lobster.',
-    image: '🦞',
+    image: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=600&q=80',
     category: 'national-park',
     region: 'other',
     suggestedQuery: '3 day Acadia National Park Maine trip',
@@ -435,7 +435,7 @@ const allDestinations: Destination[] = [
     name: 'Memphis',
     tagline: 'Home of the Blues & Rock n Roll',
     description: 'Visit Graceland, Sun Studio, and Beale Street where Elvis and B.B. King made history.',
-    image: '🎸',
+    image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80',
     category: 'music',
     region: 'other',
     suggestedQuery: '3 day Memphis music history and BBQ trip',
@@ -445,7 +445,7 @@ const allDestinations: Destination[] = [
     name: 'Outer Banks',
     tagline: 'Wild Horses & Shipwrecks',
     description: 'Drive the barrier islands, see wild horses, climb lighthouses, and visit Kitty Hawk.',
-    image: '🐴',
+    image: 'https://images.unsplash.com/photo-1500917293891-ef795e70e1f6?w=600&q=80',
     category: 'beach',
     region: 'other',
     suggestedQuery: '4 day Outer Banks North Carolina trip',
@@ -455,7 +455,7 @@ const allDestinations: Destination[] = [
     name: 'Savannah',
     tagline: 'Southern Charm & Spanish Moss',
     description: 'Stroll through historic squares, take ghost tours, and enjoy Lowcountry cuisine.',
-    image: '🌳',
+    image: 'https://images.unsplash.com/photo-1528164344705-47542687000d?w=600&q=80',
     category: 'culture',
     region: 'other',
     suggestedQuery: '3 day Savannah Georgia historic and food tour',
@@ -465,7 +465,7 @@ const allDestinations: Destination[] = [
     name: 'Road to Hana',
     tagline: 'Maui\'s Legendary Drive',
     description: '600+ curves, 50+ bridges, countless waterfalls, and black sand beaches await.',
-    image: '🌺',
+    image: 'https://images.unsplash.com/photo-1505852679233-d9fd70aff56d?w=600&q=80',
     category: 'road-trip',
     region: 'other',
     suggestedQuery: '2 day Road to Hana Maui adventure',
@@ -475,7 +475,7 @@ const allDestinations: Destination[] = [
     name: 'Boston Freedom Trail',
     tagline: 'Walk Through American History',
     description: 'Follow the red brick road through 16 historic sites from the American Revolution.',
-    image: '🔔',
+    image: 'https://images.unsplash.com/photo-1573511860302-28c524319d2a?w=600&q=80',
     category: 'culture',
     region: 'other',
     suggestedQuery: '3 day Boston history and seafood trip',
@@ -485,7 +485,7 @@ const allDestinations: Destination[] = [
     name: 'Yosemite',
     tagline: 'Granite Cliffs & Giant Sequoias',
     description: 'Stand beneath El Capitan, watch Yosemite Falls, and walk among ancient giant sequoias.',
-    image: '🌲',
+    image: 'https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=600&q=80',
     category: 'national-park',
     region: 'other',
     suggestedQuery: '3 day Yosemite National Park adventure',
@@ -495,7 +495,7 @@ const allDestinations: Destination[] = [
     name: 'Charleston',
     tagline: 'Southern Belle of the Coast',
     description: 'Admire antebellum architecture, feast on shrimp and grits, and explore plantation history.',
-    image: '🏛️',
+    image: 'https://images.unsplash.com/photo-1519817914152-22d216bb9170?w=600&q=80',
     category: 'culture',
     region: 'other',
     suggestedQuery: '3 day Charleston SC food and history tour',
@@ -505,7 +505,7 @@ const allDestinations: Destination[] = [
     name: 'Great Smoky Mountains',
     tagline: 'Most Visited National Park',
     description: 'Hike misty trails, spot black bears, and experience Appalachian culture in Gatlinburg.',
-    image: '🐻',
+    image: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=600&q=80',
     category: 'national-park',
     region: 'other',
     suggestedQuery: '3 day Great Smoky Mountains hiking trip',
@@ -515,7 +515,7 @@ const allDestinations: Destination[] = [
     name: 'San Diego',
     tagline: 'Perfect Weather Paradise',
     description: 'Relax on beaches, visit the world-famous zoo, and explore the historic Gaslamp Quarter.',
-    image: '☀️',
+    image: 'https://images.unsplash.com/photo-1538097304804-2a1b932466a9?w=600&q=80',
     category: 'beach',
     region: 'other',
     suggestedQuery: '4 day San Diego beaches, zoo, and tacos trip',
@@ -543,24 +543,20 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 function getRandomDestinations(): Destination[] {
-  // Separate by region for weighted selection
   const texas = allDestinations.filter(d => d.region === 'texas');
   const southwest = allDestinations.filter(d => d.region === 'southwest');
   const other = allDestinations.filter(d => d.region === 'other');
 
-  // Shuffle each region
   const shuffledTexas = shuffleArray(texas);
   const shuffledSouthwest = shuffleArray(southwest);
   const shuffledOther = shuffleArray(other);
 
-  // Pick weighted: 3 Texas, 3 Southwest, 2 Other
   const selected: Destination[] = [
     ...shuffledTexas.slice(0, 3),
     ...shuffledSouthwest.slice(0, 3),
     ...shuffledOther.slice(0, 2),
   ];
 
-  // Shuffle the final selection so regions are mixed
   return shuffleArray(selected);
 }
 
@@ -569,14 +565,13 @@ export function ExplorePage() {
   const { dispatch } = useTripContext();
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  // Get random destinations on page load
+  const [imageLoaded, setImageLoaded] = useState<Record<string, boolean>>({});
+
   const featuredDestinations = useMemo(() => {
     return getRandomDestinations();
   }, []);
 
-  // Filter based on category and search
   const filteredDestinations = useMemo(() => {
-    // If searching or filtering by category, search the full pool
     if (searchQuery || activeCategory !== 'all') {
       return allDestinations.filter(dest => {
         const matchesCategory = activeCategory === 'all' || dest.category === activeCategory;
@@ -587,13 +582,16 @@ export function ExplorePage() {
         return matchesCategory && matchesSearch;
       });
     }
-    // Otherwise show the random featured selection
     return featuredDestinations;
   }, [activeCategory, searchQuery, featuredDestinations]);
 
   const handleStartTrip = (destination: Destination) => {
     dispatch({ type: 'SET_QUERY', payload: destination.suggestedQuery });
     navigate('/plan?start=true');
+  };
+
+  const handleImageLoad = (id: string) => {
+    setImageLoaded(prev => ({ ...prev, [id]: true }));
   };
 
   return (
@@ -629,12 +627,26 @@ export function ExplorePage() {
       </section>
 
       <section className="explore-grid">
-        {filteredDestinations.map(dest => (
-          <div key={dest.id} className="destination-card">
-            <div className="destination-image">
-              <span className="destination-emoji">{dest.image}</span>
+        {filteredDestinations.map((dest, index) => (
+          <div
+            key={dest.id}
+            className="destination-card-new"
+            style={{ animationDelay: `${index * 50}ms` }}
+          >
+            <div className="destination-image-new">
+              {!imageLoaded[dest.id] && (
+                <div className="skeleton-image"></div>
+              )}
+              <img
+                src={dest.image}
+                alt={dest.name}
+                loading="lazy"
+                onLoad={() => handleImageLoad(dest.id)}
+                style={{ opacity: imageLoaded[dest.id] ? 1 : 0 }}
+              />
+              <div className="destination-overlay"></div>
             </div>
-            <div className="destination-content">
+            <div className="destination-content-new">
               <h3 className="destination-name">{dest.name}</h3>
               <p className="destination-tagline">{dest.tagline}</p>
               <p className="destination-description">{dest.description}</p>
