@@ -565,7 +565,6 @@ export function ExplorePage() {
   const { dispatch } = useTripContext();
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [imageError, setImageError] = useState<Record<string, boolean>>({});
 
   const featuredDestinations = useMemo(() => {
     return getRandomDestinations();
@@ -590,11 +589,7 @@ export function ExplorePage() {
     navigate('/plan?start=true');
   };
 
-  const handleImageError = (id: string) => {
-    setImageError(prev => ({ ...prev, [id]: true }));
-  };
-
-  // Fallback gradient colors based on category
+  // Gradient colors based on category
   const getCategoryGradient = (category: string) => {
     const gradients: Record<string, string> = {
       'music': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -661,23 +656,11 @@ export function ExplorePage() {
             className="destination-card-new"
             style={{ animationDelay: `${index * 50}ms` }}
           >
-            <div className="destination-image-new">
-              {imageError[dest.id] ? (
-                <div
-                  className="destination-fallback"
-                  style={{ background: getCategoryGradient(dest.category) }}
-                >
-                  <span className="fallback-emoji">{getCategoryEmoji(dest.category)}</span>
-                </div>
-              ) : (
-                <img
-                  src={dest.image}
-                  alt={dest.name}
-                  loading="lazy"
-                  onError={() => handleImageError(dest.id)}
-                />
-              )}
-              <div className="destination-overlay"></div>
+            <div
+              className="destination-icon-header"
+              style={{ background: getCategoryGradient(dest.category) }}
+            >
+              <span className="destination-emoji">{getCategoryEmoji(dest.category)}</span>
             </div>
             <div className="destination-content-new">
               <h3 className="destination-name">{dest.name}</h3>

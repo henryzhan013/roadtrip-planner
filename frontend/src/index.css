@@ -3178,29 +3178,21 @@ h1, h2, h3, h4, h5, h6 {
   transform: translateY(-8px);
 }
 
-.destination-image-new {
-  position: relative;
-  height: 180px;
-  overflow: hidden;
-  background: var(--gray-200);
+.destination-icon-header {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
 }
 
-.destination-image-new img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform var(--transition-slow), opacity var(--transition);
+.destination-card-new:hover .destination-icon-header {
+  filter: brightness(1.1);
 }
 
-.destination-card-new:hover .destination-image-new img {
-  transform: scale(1.1);
-}
-
-.destination-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 60%);
-  pointer-events: none;
+.destination-emoji {
+  font-size: 36px;
+  opacity: 0.95;
 }
 
 .destination-content-new {
@@ -3228,19 +3220,6 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 16px;
 }
 
-/* Fallback for broken images */
-.destination-fallback {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.fallback-emoji {
-  font-size: 48px;
-  opacity: 0.9;
-}
 
 /* Skeleton loader styles */
 .skeleton {
