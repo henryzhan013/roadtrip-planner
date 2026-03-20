@@ -914,6 +914,24 @@ COST_ESTIMATES = {
 }
 
 
+class PlaylistRequest(BaseModel):
+    """Request model for playlist generation."""
+    query: str  # The trip query to generate playlist for
+
+
+class PlaylistSong(BaseModel):
+    """A song in the playlist."""
+    title: str
+    artist: str
+
+
+class PlaylistResponse(BaseModel):
+    """Response model for playlist generation."""
+    region: str
+    vibe: str
+    songs: list[PlaylistSong]
+
+
 class BudgetRequest(BaseModel):
     """Request model for budget calculation."""
     days: list  # List of DayPlan objects
@@ -959,6 +977,93 @@ def calculate_budget(request: BudgetRequest):
         total_estimated=sum(by_day),
         by_day=by_day,
         by_category=by_category
+    )
+
+
+# =============================================================================
+# PLAYLIST GENERATION ENDPOINT
+# =============================================================================
+
+PLAYLIST_SYSTEM_PROMPT = """You are a music curator creating the perfect road trip playlist. Based on the trip destination and vibe, suggest 25 songs that capture the spirit of the journey.
+
+Respond with valid JSON only:
+{
+  "region": "Short region name (e.g., 'Texas', 'Pacific Coast', 'Deep South')",
+  "vibe": "A short poetic description of the musical vibe (e.g., 'Dust, boots, and endless highways')",
+  "songs": [
+    {"title": "Song Title", "artist": "Artist Name"},
+    ...
+  ]
+}
+
+GUIDELINES:
+- Include exactly 25 songs
+- Mix classics with modern hits that fit the region/vibe
+- Include local artists and regional music styles
+- For Texas: country, red dirt, outlaw country, tejano influences
+- For California: west coast rock, surf rock, west coast hip-hop
+- For Nashville/Tennessee: country, americana, bluegrass, soul
+- For New Orleans/Louisiana: jazz, blues, zydeco, funk, brass band
+- For Florida: southern rock, beach music, latin pop
+- For Pacific Northwest: grunge, indie rock, folk
+- For Southwest: desert rock, americana, western
+- For New England: folk rock, indie, celtic influences
+- For Colorado: bluegrass, jam band, folk rock
+- For general road trips: classic rock driving anthems
+- Songs should be well-known enough to find on streaming services
+- Create a cohesive playlist that flows well for a long drive"""
+
+
+async def generate_playlist(query: str) -> dict:
+    """Generate a road trip playlist using OpenAI."""
+    if openai_client is None:
+        raise HTTPException(status_code=503, detail="OpenAI client not initialized")
+
+    allowed, reason = openai_limiter.check()
+    if not allowed:
+        raise HTTPException(status_code=429, detail=reason)
+
+    try:
+        response = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            response_format={"type": "json_object"},
+            messages=[
+                {"role": "system", "content": PLAYLIST_SYSTEM_PROMPT},
+                {"role": "user", "content": f"Create a playlist for this road trip: {query}"}
+            ]
+        )
+        openai_limiter.record()
+
+        response_text = response.choices[0].message.content
+        return json.loads(response_text)
+
+    except openai.APIError as e:
+        raise HTTPException(status_code=502, detail=f"OpenAI API error: {str(e)}")
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=500, detail="Failed to parse playlist response")
+
+
+@app.post("/playlist", response_model=PlaylistResponse)
+async def create_playlist(request: PlaylistRequest):
+    """
+    Generate a road trip playlist based on the trip destination.
+
+    Returns 25 songs curated for the region and vibe of the trip.
+    """
+    if not OPENAI_API_KEY:
+        raise HTTPException(status_code=503, detail="OpenAI API key not configured")
+
+    playlist_data = await generate_playlist(request.query)
+
+    songs = [
+        PlaylistSong(title=s.get("title", ""), artist=s.get("artist", ""))
+        for s in playlist_data.get("songs", [])
+    ]
+
+    return PlaylistResponse(
+        region=playlist_data.get("region", "Road Trip"),
+        vibe=playlist_data.get("vibe", "Perfect for any adventure"),
+        songs=songs
     )
 
 
