@@ -569,12 +569,10 @@ export function ExplorePage() {
   const { dispatch } = useTripContext();
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [shuffleKey, setShuffleKey] = useState(0);
-
-  // Get random destinations, re-randomize when shuffleKey changes
+  // Get random destinations on page load
   const featuredDestinations = useMemo(() => {
     return getRandomDestinations();
-  }, [shuffleKey]);
+  }, []);
 
   // Filter based on category and search
   const filteredDestinations = useMemo(() => {
@@ -597,14 +595,6 @@ export function ExplorePage() {
     dispatch({ type: 'SET_QUERY', payload: destination.suggestedQuery });
     navigate('/plan?start=true');
   };
-
-  const handleShuffle = () => {
-    setShuffleKey(prev => prev + 1);
-    setActiveCategory('all');
-    setSearchQuery('');
-  };
-
-  const isShowingFeatured = !searchQuery && activeCategory === 'all';
 
   return (
     <div className="explore-page">
@@ -637,15 +627,6 @@ export function ExplorePage() {
           </button>
         ))}
       </section>
-
-      {isShowingFeatured && (
-        <div className="explore-shuffle">
-          <span className="shuffle-label">Showing 8 random picks</span>
-          <button className="btn btn-secondary btn-sm" onClick={handleShuffle}>
-            🎲 Shuffle
-          </button>
-        </div>
-      )}
 
       <section className="explore-grid">
         {filteredDestinations.map(dest => (
