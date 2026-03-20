@@ -3584,3 +3584,154 @@ h1, h2, h3, h4, h5, h6 {
     width: auto;
   }
 }
+
+/* ========================================
+   Playlist Section
+   ======================================== */
+.trip-summary-container {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.trip-summary-container .trip-summary {
+  flex: 1;
+  min-width: 280px;
+}
+
+.playlist-section {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  color: white;
+  min-width: 300px;
+  flex: 1;
+  max-width: 400px;
+}
+
+.playlist-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.playlist-icon {
+  font-size: 24px;
+}
+
+.playlist-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+}
+
+.playlist-region {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: auto;
+}
+
+.playlist-vibe {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  font-style: italic;
+  margin-bottom: 16px;
+}
+
+.playlist-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.playlist-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.5);
+  display: block;
+  margin-bottom: 6px;
+}
+
+.playlist-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.playlist-tag {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.genre-tag {
+  background: rgba(99, 102, 241, 0.3);
+  color: #a5b4fc;
+}
+
+.artist-tag {
+  background: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+}
+
+.btn-spotify {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  background: #1DB954;
+  color: white;
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  font-weight: 600;
+  text-decoration: none;
+  transition: all var(--transition);
+}
+
+.btn-spotify:hover {
+  background: #1ed760;
+  transform: translateY(-1px);
+}
+
+/* Contact Page Styles */
+.contact-page {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.contact-hero {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.contact-hero h1 {
+  font-size: 36px;
+  margin-bottom: 12px;
+}
+
+.contact-tagline {
+  color: var(--gray-600);
+  font-size: 18px;
+}
+
+@media (max-width: 768px) {
+  .trip-summary-container {
+    flex-direction: column;
+  }
+
+  .playlist-section {
+    max-width: 100%;
+  }
+}

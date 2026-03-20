@@ -28,54 +28,15 @@ export function AboutPage() {
   };
 
   return (
-    <div className="about-page">
-      <section className="about-hero">
-        <h1>About Road Trip Planner</h1>
-        <p className="about-tagline">
-          Your AI-powered companion for planning unforgettable road trips
+    <div className="contact-page">
+      <section className="contact-hero">
+        <h1>Contact Us</h1>
+        <p className="contact-tagline">
+          Have questions, feedback, or just want to say hi? We'd love to hear from you!
         </p>
       </section>
 
-      <section className="about-content">
-        <div className="about-section">
-          <h2>Our Mission</h2>
-          <p>
-            We believe that the best adventures start with great planning. Road Trip Planner
-            combines the power of AI with real-world data to help you create personalized
-            itineraries that match your interests, budget, and schedule.
-          </p>
-        </div>
-
-        <div className="about-section">
-          <h2>What We Offer</h2>
-          <div className="about-features">
-            <div className="about-feature">
-              <span className="about-feature-icon">🤖</span>
-              <h3>AI-Powered Itineraries</h3>
-              <p>Simply describe your dream trip and let our AI create a complete day-by-day plan.</p>
-            </div>
-            <div className="about-feature">
-              <span className="about-feature-icon">📍</span>
-              <h3>Real Places & Reviews</h3>
-              <p>All recommendations come from verified locations with ratings and reviews.</p>
-            </div>
-            <div className="about-feature">
-              <span className="about-feature-icon">🗺️</span>
-              <h3>Interactive Maps</h3>
-              <p>Visualize your entire route with driving directions and estimated times.</p>
-            </div>
-            <div className="about-feature">
-              <span className="about-feature-icon">💾</span>
-              <h3>Save & Share</h3>
-              <p>Keep your favorite trips saved and share them with friends and family.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section className="contact-section">
-        <h2>Contact Us</h2>
-        <p>Have questions or feedback? We'd love to hear from you!</p>
 
         <form className="contact-form" onSubmit={handleSubmit}>
           <div className="form-group">

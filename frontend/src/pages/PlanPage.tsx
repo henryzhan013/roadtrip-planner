@@ -36,6 +36,160 @@ const LOADING_STAGES = [
   { text: 'Optimizing your itinerary', icon: '✨' },
 ];
 
+// Road trip playlist recommendations by region/theme
+const PLAYLIST_DATA: Record<string, { genres: string[]; artists: string[]; vibe: string }> = {
+  texas: {
+    genres: ['Texas Country', 'Red Dirt', 'Outlaw Country', 'Tejano'],
+    artists: ['George Strait', 'Willie Nelson', 'Turnpike Troubadours', 'Midland', 'Cody Johnson', 'Pat Green', 'Randy Rogers Band', 'Koe Wetzel'],
+    vibe: 'Dust, boots, and endless highways',
+  },
+  nashville: {
+    genres: ['Country', 'Americana', 'Bluegrass', 'Southern Rock'],
+    artists: ['Chris Stapleton', 'Sturgill Simpson', 'Tyler Childers', 'Jason Isbell', 'Margo Price', 'Dolly Parton'],
+    vibe: 'Honky tonk nights and music history',
+  },
+  'new orleans': {
+    genres: ['Jazz', 'Blues', 'Zydeco', 'Funk', 'Brass Band'],
+    artists: ['Louis Armstrong', 'Dr. John', 'Preservation Hall Jazz Band', 'Trombone Shorty', 'Rebirth Brass Band', 'Allen Toussaint'],
+    vibe: 'Soul, swamp, and second lines',
+  },
+  california: {
+    genres: ['West Coast Rock', 'Surf Rock', 'California Country', 'West Coast Hip-Hop'],
+    artists: ['Eagles', 'Red Hot Chili Peppers', 'Tom Petty', 'Sublime', 'Fleetwood Mac', 'Beach Boys', 'Tupac', 'Kendrick Lamar'],
+    vibe: 'Pacific sunsets and coastal cruising',
+  },
+  'pacific coast': {
+    genres: ['Surf Rock', 'Indie Folk', 'California Rock'],
+    artists: ['Jack Johnson', 'Bon Iver', 'Fleet Foxes', 'The War on Drugs', 'Lord Huron', 'Khruangbin'],
+    vibe: 'Ocean breeze and winding roads',
+  },
+  southwest: {
+    genres: ['Desert Rock', 'Americana', 'Indie Western'],
+    artists: ['Calexico', 'Giant Sand', 'Marty Robbins', 'Townes Van Zandt', 'Colter Wall', 'Charley Crockett'],
+    vibe: 'Desert sunsets and open range',
+  },
+  'new england': {
+    genres: ['Folk Rock', 'Indie', 'Celtic Folk'],
+    artists: ['James Taylor', 'The Dropkick Murphys', 'Dispatch', 'Guster', 'Vampire Weekend', 'The National'],
+    vibe: 'Autumn leaves and coastal charm',
+  },
+  florida: {
+    genres: ['Southern Rock', 'Beach Music', 'Latin Pop', 'Miami Bass'],
+    artists: ['Tom Petty', 'Lynyrd Skynyrd', 'Jimmy Buffett', 'Pitbull', 'Gloria Estefan', 'KC and the Sunshine Band'],
+    vibe: 'Palm trees and endless summer',
+  },
+  'pacific northwest': {
+    genres: ['Grunge', 'Indie Rock', 'Folk'],
+    artists: ['Nirvana', 'Pearl Jam', 'Modest Mouse', 'Death Cab for Cutie', 'Fleet Foxes', 'Band of Horses'],
+    vibe: 'Misty forests and coffee shops',
+  },
+  seattle: {
+    genres: ['Grunge', 'Alternative Rock', 'Indie'],
+    artists: ['Nirvana', 'Pearl Jam', 'Soundgarden', 'Alice in Chains', 'Foo Fighters', 'Death Cab for Cutie'],
+    vibe: 'Rain-soaked rock and roll',
+  },
+  memphis: {
+    genres: ['Blues', 'Soul', 'Rock n Roll', 'R&B'],
+    artists: ['Elvis Presley', 'B.B. King', 'Otis Redding', 'Johnny Cash', 'Al Green', 'Booker T. & the M.G.\'s'],
+    vibe: 'Where rock and soul were born',
+  },
+  colorado: {
+    genres: ['Bluegrass', 'Jam Band', 'Folk Rock'],
+    artists: ['John Denver', 'String Cheese Incident', 'Yonder Mountain', 'Nathaniel Rateliff', 'The Lumineers', 'Big Head Todd'],
+    vibe: 'Mountain highs and festival nights',
+  },
+  'road trip': {
+    genres: ['Classic Rock', 'Americana', 'Driving Songs'],
+    artists: ['Tom Petty', 'Bruce Springsteen', 'CCR', 'The Eagles', 'Lynyrd Skynyrd', 'Bob Seger'],
+    vibe: 'Open road anthems',
+  },
+  default: {
+    genres: ['Classic Rock', 'Indie', 'Americana'],
+    artists: ['Tom Petty', 'Fleetwood Mac', 'The Lumineers', 'Hozier', 'The War on Drugs', 'Khruangbin'],
+    vibe: 'Perfect for any adventure',
+  },
+};
+
+function getPlaylistForTrip(query: string): { genres: string[]; artists: string[]; vibe: string; region: string } {
+  const lowerQuery = query.toLowerCase();
+
+  // Check for specific matches
+  const keywords = Object.keys(PLAYLIST_DATA).filter(k => k !== 'default');
+  for (const keyword of keywords) {
+    if (lowerQuery.includes(keyword)) {
+      return { ...PLAYLIST_DATA[keyword], region: keyword };
+    }
+  }
+
+  // Check for state/region patterns
+  if (lowerQuery.includes('texas') || lowerQuery.includes(' tx')) {
+    return { ...PLAYLIST_DATA.texas, region: 'Texas' };
+  }
+  if (lowerQuery.includes('tennessee') || lowerQuery.includes('nashville')) {
+    return { ...PLAYLIST_DATA.nashville, region: 'Nashville' };
+  }
+  if (lowerQuery.includes('louisiana') || lowerQuery.includes('cajun')) {
+    return { ...PLAYLIST_DATA['new orleans'], region: 'Louisiana' };
+  }
+  if (lowerQuery.includes('arizona') || lowerQuery.includes('utah') || lowerQuery.includes('nevada') || lowerQuery.includes('new mexico')) {
+    return { ...PLAYLIST_DATA.southwest, region: 'Southwest' };
+  }
+  if (lowerQuery.includes('oregon') || lowerQuery.includes('washington') || lowerQuery.includes('seattle') || lowerQuery.includes('portland')) {
+    return { ...PLAYLIST_DATA['pacific northwest'], region: 'Pacific Northwest' };
+  }
+  if (lowerQuery.includes('maine') || lowerQuery.includes('vermont') || lowerQuery.includes('boston') || lowerQuery.includes('massachusetts')) {
+    return { ...PLAYLIST_DATA['new england'], region: 'New England' };
+  }
+  if (lowerQuery.includes('colorado') || lowerQuery.includes('denver')) {
+    return { ...PLAYLIST_DATA.colorado, region: 'Colorado' };
+  }
+  if (lowerQuery.includes('florida') || lowerQuery.includes('miami') || lowerQuery.includes('keys')) {
+    return { ...PLAYLIST_DATA.florida, region: 'Florida' };
+  }
+  if (lowerQuery.includes('california') || lowerQuery.includes('la') || lowerQuery.includes('san francisco') || lowerQuery.includes('san diego')) {
+    return { ...PLAYLIST_DATA.california, region: 'California' };
+  }
+
+  return { ...PLAYLIST_DATA.default, region: 'Road Trip' };
+}
+
+function PlaylistSection({ query }: { query: string }) {
+  const playlist = getPlaylistForTrip(query);
+  const spotifySearch = `https://open.spotify.com/search/${encodeURIComponent(playlist.artists[0] + ' ' + playlist.genres[0])}`;
+
+  return (
+    <div className="playlist-section">
+      <div className="playlist-header">
+        <span className="playlist-icon">🎵</span>
+        <h3>Road Trip Playlist</h3>
+        <span className="playlist-region">{playlist.region}</span>
+      </div>
+      <p className="playlist-vibe">{playlist.vibe}</p>
+      <div className="playlist-content">
+        <div className="playlist-genres">
+          <span className="playlist-label">Genres</span>
+          <div className="playlist-tags">
+            {playlist.genres.map(genre => (
+              <span key={genre} className="playlist-tag genre-tag">{genre}</span>
+            ))}
+          </div>
+        </div>
+        <div className="playlist-artists">
+          <span className="playlist-label">Artists</span>
+          <div className="playlist-tags">
+            {playlist.artists.slice(0, 6).map(artist => (
+              <span key={artist} className="playlist-tag artist-tag">{artist}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+      <a href={spotifySearch} target="_blank" rel="noopener noreferrer" className="btn btn-spotify">
+        <span>🎧</span> Find on Spotify
+      </a>
+    </div>
+  );
+}
+
 function TripLoader() {
   const [tipIndex, setTipIndex] = useState(0);
   const [stageIndex, setStageIndex] = useState(0);
@@ -358,13 +512,16 @@ export function PlanPage() {
 
       {/* Trip Summary */}
       {state.tripSummary && !state.loading && (
-        <div className="trip-summary">
-          <div className="trip-summary-title">📍 {state.tripSummary}</div>
-          <div className="trip-summary-stats">
-            <span>📅 {state.tripDays.length} days</span>
-            <span>📍 {state.tripDays.reduce((sum, d) => sum + d.activities.filter(a => a.place).length, 0)} stops</span>
-            {budget && budget.spent > 0 && <span>💰 ~${budget.spent.toLocaleString()}</span>}
+        <div className="trip-summary-container">
+          <div className="trip-summary">
+            <div className="trip-summary-title">📍 {state.tripSummary}</div>
+            <div className="trip-summary-stats">
+              <span>📅 {state.tripDays.length} days</span>
+              <span>📍 {state.tripDays.reduce((sum, d) => sum + d.activities.filter(a => a.place).length, 0)} stops</span>
+              {budget && budget.spent > 0 && <span>💰 ~${budget.spent.toLocaleString()}</span>}
+            </div>
           </div>
+          <PlaylistSection query={state.query} />
         </div>
       )}
 
