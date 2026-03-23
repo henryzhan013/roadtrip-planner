@@ -985,12 +985,12 @@ def calculate_budget(request: BudgetRequest):
 # PLAYLIST GENERATION ENDPOINT
 # =============================================================================
 
-PLAYLIST_SYSTEM_PROMPT = """You are an expert music curator creating the ultimate road trip playlist. Based on the trip destination and vibe, suggest 30 songs that perfectly capture the spirit of the journey.
+PLAYLIST_SYSTEM_PROMPT = """You are a music curator creating a road trip playlist. Based on the trip, suggest 30 songs that fit the vibe.
 
 Respond with valid JSON only:
 {
-  "region": "Short region name (e.g., 'Texas', 'Pacific Coast', 'Deep South')",
-  "vibe": "A short poetic description of the musical vibe (e.g., 'Dust, boots, and endless highways')",
+  "region": "Short region/theme name",
+  "vibe": "A short poetic description of the playlist vibe",
   "songs": [
     {"title": "Song Title", "artist": "Artist Name"},
     ...
@@ -998,30 +998,11 @@ Respond with valid JSON only:
 }
 
 GUIDELINES:
-- Include exactly 30 songs - enough for a solid 2+ hour drive
-- Prioritize GREAT driving songs - songs with energy, atmosphere, or emotional resonance for the road
-- Mix timeless classics (60s-90s) with modern hits (2000s-present) - aim for 50/50 balance
-- Include artists FROM the region, not just songs ABOUT the region
-- Vary the tempo: start upbeat, mix in some mellow middle sections, build energy for the final stretch
-
-REGIONAL DEEP CUTS (go beyond the obvious):
-- For Texas: Willie Nelson, Waylon Jennings, George Strait, Townes Van Zandt, Kacey Musgraves, Khruangbin, ZZ Top, Selena, Grupo Fantasma, Gary Clark Jr., Leon Bridges
-- For California: Eagles, Tom Petty, Fleetwood Mac, Red Hot Chili Peppers, Sublime, Kendrick Lamar, The Beach Boys, Joni Mitchell, Dr. Dre, Beck
-- For Nashville/Tennessee: Johnny Cash, Dolly Parton, Chris Stapleton, Sturgill Simpson, Jason Isbell, The Black Keys, Kings of Leon, Jack White
-- For New Orleans/Louisiana: Dr. John, The Meters, Trombone Shorty, Irma Thomas, Allen Toussaint, Clifton Chenier, Lucinda Williams, Better Than Ezra
-- For Florida: Tom Petty, Lynyrd Skynyrd, The Allman Brothers, Jimmy Buffett, Pitbull, Gloria Estefan, Against Me!
-- For Pacific Northwest: Nirvana, Pearl Jam, Soundgarden, Fleet Foxes, Death Cab for Cutie, Modest Mouse, Heart, Jimi Hendrix
-- For Southwest/Arizona: Calexico, Giant Sand, Meat Puppets, Jimmy Eat World, The Refreshments, Roger Clyne
-- For New England: Aerosmith, The Pixies, James Taylor, Dispatch, Vampire Weekend, The Cars
-- For Colorado: John Denver, Big Head Todd, The Lumineers, Nathaniel Rateliff, String Cheese Incident
-- For general road trips: classic rock anthems, 70s/80s hits, singalong favorites
-
-SONG SELECTION CRITERIA:
-- Every song should make you want to roll the windows down or sing along
-- Include at least 5 deep cuts or lesser-known gems alongside the hits
-- Avoid overly slow ballads or songs that kill driving momentum
-- Songs must be real and findable on Spotify/Apple Music
-- Create a playlist that flows - don't put two slow songs back to back"""
+- Include exactly 30 songs
+- Pick songs that relate to the trip - the destination, the vibe, the activities, or the mood
+- Mix classics with modern songs
+- Good driving songs - stuff you'd want to hear on the road
+- Songs must be real and findable on Spotify/Apple Music"""
 
 
 async def generate_playlist(query: str) -> dict:
