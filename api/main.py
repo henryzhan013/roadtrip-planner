@@ -324,7 +324,8 @@ GUIDELINES:
 - search_query should be specific: "best tacos Mission District San Francisco" not just "restaurant"
 - Mix famous spots with local hidden gems
 - Last day should end at a logical departure point
-- 3-5 activities per day is plenty. Don't over-schedule."""
+- 3-5 activities per day is plenty. Don't over-schedule.
+- IMPORTANT: Stay within the geographic region the user requested. If they say "Texas roadtrip", ALL destinations must be in Texas. If they say "California coast trip", stay in California. Only include other states if the user explicitly requests a multi-state trip (e.g., "Texas to Nashville", "Southwest road trip", "cross-country trip")."""
 
 
 async def call_openai(query: str) -> dict:
@@ -984,7 +985,7 @@ def calculate_budget(request: BudgetRequest):
 # PLAYLIST GENERATION ENDPOINT
 # =============================================================================
 
-PLAYLIST_SYSTEM_PROMPT = """You are a music curator creating the perfect road trip playlist. Based on the trip destination and vibe, suggest 25 songs that capture the spirit of the journey.
+PLAYLIST_SYSTEM_PROMPT = """You are an expert music curator creating the ultimate road trip playlist. Based on the trip destination and vibe, suggest 30 songs that perfectly capture the spirit of the journey.
 
 Respond with valid JSON only:
 {
@@ -997,21 +998,30 @@ Respond with valid JSON only:
 }
 
 GUIDELINES:
-- Include exactly 25 songs
-- Mix classics with modern hits that fit the region/vibe
-- Include local artists and regional music styles
-- For Texas: country, red dirt, outlaw country, tejano influences
-- For California: west coast rock, surf rock, west coast hip-hop
-- For Nashville/Tennessee: country, americana, bluegrass, soul
-- For New Orleans/Louisiana: jazz, blues, zydeco, funk, brass band
-- For Florida: southern rock, beach music, latin pop
-- For Pacific Northwest: grunge, indie rock, folk
-- For Southwest: desert rock, americana, western
-- For New England: folk rock, indie, celtic influences
-- For Colorado: bluegrass, jam band, folk rock
-- For general road trips: classic rock driving anthems
-- Songs should be well-known enough to find on streaming services
-- Create a cohesive playlist that flows well for a long drive"""
+- Include exactly 30 songs - enough for a solid 2+ hour drive
+- Prioritize GREAT driving songs - songs with energy, atmosphere, or emotional resonance for the road
+- Mix timeless classics (60s-90s) with modern hits (2000s-present) - aim for 50/50 balance
+- Include artists FROM the region, not just songs ABOUT the region
+- Vary the tempo: start upbeat, mix in some mellow middle sections, build energy for the final stretch
+
+REGIONAL DEEP CUTS (go beyond the obvious):
+- For Texas: Willie Nelson, Waylon Jennings, George Strait, Townes Van Zandt, Kacey Musgraves, Khruangbin, ZZ Top, Selena, Grupo Fantasma, Gary Clark Jr., Leon Bridges
+- For California: Eagles, Tom Petty, Fleetwood Mac, Red Hot Chili Peppers, Sublime, Kendrick Lamar, The Beach Boys, Joni Mitchell, Dr. Dre, Beck
+- For Nashville/Tennessee: Johnny Cash, Dolly Parton, Chris Stapleton, Sturgill Simpson, Jason Isbell, The Black Keys, Kings of Leon, Jack White
+- For New Orleans/Louisiana: Dr. John, The Meters, Trombone Shorty, Irma Thomas, Allen Toussaint, Clifton Chenier, Lucinda Williams, Better Than Ezra
+- For Florida: Tom Petty, Lynyrd Skynyrd, The Allman Brothers, Jimmy Buffett, Pitbull, Gloria Estefan, Against Me!
+- For Pacific Northwest: Nirvana, Pearl Jam, Soundgarden, Fleet Foxes, Death Cab for Cutie, Modest Mouse, Heart, Jimi Hendrix
+- For Southwest/Arizona: Calexico, Giant Sand, Meat Puppets, Jimmy Eat World, The Refreshments, Roger Clyne
+- For New England: Aerosmith, The Pixies, James Taylor, Dispatch, Vampire Weekend, The Cars
+- For Colorado: John Denver, Big Head Todd, The Lumineers, Nathaniel Rateliff, String Cheese Incident
+- For general road trips: classic rock anthems, 70s/80s hits, singalong favorites
+
+SONG SELECTION CRITERIA:
+- Every song should make you want to roll the windows down or sing along
+- Include at least 5 deep cuts or lesser-known gems alongside the hits
+- Avoid overly slow ballads or songs that kill driving momentum
+- Songs must be real and findable on Spotify/Apple Music
+- Create a playlist that flows - don't put two slow songs back to back"""
 
 
 async def generate_playlist(query: str) -> dict:
@@ -1048,7 +1058,7 @@ async def create_playlist(request: PlaylistRequest):
     """
     Generate a road trip playlist based on the trip destination.
 
-    Returns 25 songs curated for the region and vibe of the trip.
+    Returns 30 songs curated for the region and vibe of the trip.
     """
     if not OPENAI_API_KEY:
         raise HTTPException(status_code=503, detail="OpenAI API key not configured")
