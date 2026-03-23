@@ -531,17 +531,17 @@ export function PlanPage() {
               onSelectPlace={data => dispatch({ type: 'SET_SELECTED_PLACE', payload: data })}
             />
           </div>
+        </div>
+      )}
 
-          {/* Playlist Panel - shown when trip is planned */}
-          {state.tripDays.length > 0 && (
-            <div className="playlist-panel">
-              <PlaylistSection
-                playlist={playlist}
-                loading={playlistLoading}
-                error={playlistError}
-              />
-            </div>
-          )}
+      {/* Playlist Section - shown below map and itinerary when trip is planned */}
+      {!state.loading && state.tripDays.length > 0 && (
+        <div className="playlist-container">
+          <PlaylistSection
+            playlist={playlist}
+            loading={playlistLoading}
+            error={playlistError}
+          />
         </div>
       )}
 
