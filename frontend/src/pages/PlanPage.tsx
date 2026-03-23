@@ -55,8 +55,6 @@ interface PlaylistSectionProps {
 }
 
 function PlaylistSection({ playlist, loading, error }: PlaylistSectionProps) {
-  const [expanded, setExpanded] = useState(false);
-
   if (loading) {
     return (
       <div className="playlist-section playlist-loading">
@@ -88,7 +86,6 @@ function PlaylistSection({ playlist, loading, error }: PlaylistSectionProps) {
     return null;
   }
 
-  const displaySongs = expanded ? playlist.songs : playlist.songs.slice(0, 10);
   const firstSong = playlist.songs[0];
   const spotifySearch = `https://open.spotify.com/search/${encodeURIComponent(firstSong.title + ' ' + firstSong.artist)}`;
 
@@ -101,7 +98,7 @@ function PlaylistSection({ playlist, loading, error }: PlaylistSectionProps) {
       </div>
       <p className="playlist-vibe">{playlist.vibe}</p>
       <div className="playlist-songs">
-        {displaySongs.map((song, idx) => (
+        {playlist.songs.map((song, idx) => (
           <div key={idx} className="playlist-song">
             <span className="song-number">{idx + 1}</span>
             <div className="song-info">
@@ -111,11 +108,6 @@ function PlaylistSection({ playlist, loading, error }: PlaylistSectionProps) {
           </div>
         ))}
       </div>
-      {playlist.songs.length > 10 && (
-        <button className="btn btn-ghost playlist-toggle" onClick={() => setExpanded(!expanded)}>
-          {expanded ? 'Show Less' : `Show All ${playlist.songs.length} Songs`}
-        </button>
-      )}
       <a href={spotifySearch} target="_blank" rel="noopener noreferrer" className="btn btn-spotify">
         <span>🎧</span> Find on Spotify
       </a>
